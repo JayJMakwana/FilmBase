@@ -134,14 +134,19 @@ class ExploreScreen extends StatelessWidget {
         try {
           // 2. Fetch movies based on whether it's a genre search or general search
           final List<Movie> movies;
-
+          
           if (isGenre) {
             movies = await apiService.searchMoviesByGenre(text);
           } else if (int.tryParse(text) != null) {
             movies = await apiService.searchMoviesByYear(text);
+          } else if (['English', 'Spanish', 'Hindi', 'Korean', 'Japanese', 'French', 'German'].contains(text)) {
+            movies = await apiService.searchMoviesByLanguage(text);
+          } else if (['Award Winners', 'Top Box Office', 'Critically Acclaimed', 'Indie Darlings', 'Based on a Book'].contains(text)) {
+            movies = await apiService.fetchCuratedCollection(text);
           } else {
             movies = await apiService.searchMovies(text);
           }
+
 
           // 3. Remove the loading dialog
           if (!context.mounted) return;
