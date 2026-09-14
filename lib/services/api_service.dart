@@ -36,11 +36,12 @@ class ApiService {
     throw Exception('Failed to search movies');
   }
 
-  Future<List<Movie>> searchMoviesByGenre(String genreQuery) async {
+  // 1. Genres with page support
+  Future<List<Movie>> searchMoviesByGenre(String genreQuery, {int page = 1}) async {
     final genreId = _getGenreId(genreQuery);
     if (genreId == -1) return searchMovies(genreQuery);
 
-    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_genres=$genreId&sort_by=popularity.desc'));
+    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_genres=$genreId&sort_by=popularity.desc&page=$page'));
     if (response.statusCode == 200) {
       final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
@@ -48,8 +49,9 @@ class ApiService {
     throw Exception('Failed to load genre movies');
   }
 
-  Future<List<Movie>> searchMoviesByYear(String year) async {
-    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&primary_release_year=$year&sort_by=popularity.desc'));
+  // 2. Release Year with page support
+  Future<List<Movie>> searchMoviesByYear(String year, {int page = 1}) async {
+    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&primary_release_year=$year&sort_by=popularity.desc&page=$page'));
     if (response.statusCode == 200) {
       final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
@@ -57,10 +59,10 @@ class ApiService {
     throw Exception('Failed to load year movies');
   }
 
-  // NEW: Filter by original language code (e.g., 'en', 'hi', 'ko')
-  Future<List<Movie>> searchMoviesByLanguage(String langName) async {
+  // 3. Languages with page support
+  Future<List<Movie>> searchMoviesByLanguage(String langName, {int page = 1}) async {
     final langCode = _getLanguageCode(langName);
-    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_original_language=$langCode&sort_by=popularity.desc'));
+    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_original_language=$langCode&sort_by=popularity.desc&page=$page'));
     if (response.statusCode == 200) {
       final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
@@ -68,16 +70,16 @@ class ApiService {
     throw Exception('Failed to load language movies');
   }
 
-  // NEW: Handle curated collections via discover parameters (Top Rated, Box Office, etc.)
-  Future<List<Movie>> fetchCuratedCollection(String collectionName) async {
-    String endpoint = '$baseUrl/discover/movie?api_key=$apiKey&sort_by=popularity.desc';
-    
+  // 4. Curated Collections (Award Winners, Top Box Office, etc.) with page support
+  Future<List<Movie>> fetchCuratedCollection(String collectionName, {int page = 1}) async {
+    String endpoint = '$baseUrl/discover/movie?api_key=$apiKey&sort_by=popularity.desc&page=$page';
+
     if (collectionName == 'Award Winners' || collectionName == 'Critically Acclaimed') {
-      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&vote_average.gte=8.0&vote_count.gte=1000&sort_by=vote_average.desc';
+      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&vote_average.gte=8.0&vote_count.gte=1000&sort_by=vote_average.desc&page=$page';
     } else if (collectionName == 'Top Box Office') {
-      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&sort_by=revenue.desc';
+      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&sort_by=revenue.desc&page=$page';
     } else if (collectionName == 'Indie Darlings') {
-      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&with_genres=18&vote_average.gte=7.5&sort_by=vote_count.asc';
+      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&with_genres=18&vote_average.gte=7.5&sort_by=vote_count.asc&page=$page';
     }
 
     final response = await http.get(Uri.parse(endpoint));
