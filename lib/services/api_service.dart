@@ -8,8 +8,8 @@ class ApiService {
   static const String apiKey = '1f453dd047f2e300189d00a0ffd4fc8b';
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
 
-  Future<List<Movie>> fetchTrendingMovies() async {
-    final response = await http.get(Uri.parse('$baseUrl/trending/movie/week?api_key=$apiKey'));
+  Future<List<Movie>> fetchTrendingMovies({int page = 1}) async {
+    final response = await http.get(Uri.parse('$baseUrl/trending/movie/week?api_key=$apiKey&page=$page'));
     if (response.statusCode == 200) {
       final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
@@ -17,8 +17,8 @@ class ApiService {
     throw Exception('Failed to load trending movies');
   }
 
-  Future<List<Movie>> fetchPopularMovies() async {
-    final response = await http.get(Uri.parse('$baseUrl/movie/popular?api_key=$apiKey'));
+  Future<List<Movie>> fetchPopularMovies({int page = 1}) async {
+    final response = await http.get(Uri.parse('$baseUrl/movie/popular?api_key=$apiKey&page=$page'));
     if (response.statusCode == 200) {
       final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
@@ -26,9 +26,36 @@ class ApiService {
     throw Exception('Failed to load popular movies');
   }
 
-  Future<List<Movie>> searchMovies(String query) async {
+  Future<List<Movie>> fetchTopRatedMovies({int page = 1}) async {
+    final response = await http.get(Uri.parse('$baseUrl/movie/top_rated?api_key=$apiKey&page=$page'));
+    if (response.statusCode == 200) {
+      final List results = json.decode(response.body)['results'] ?? [];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    }
+    throw Exception('Failed to load top rated movies');
+  }
+
+  Future<List<Movie>> fetchNowPlayingMovies({int page = 1}) async {
+    final response = await http.get(Uri.parse('$baseUrl/movie/now_playing?api_key=$apiKey&page=$page'));
+    if (response.statusCode == 200) {
+      final List results = json.decode(response.body)['results'] ?? [];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    }
+    throw Exception('Failed to load now playing movies');
+  }
+
+  Future<List<Movie>> fetchUpcomingMovies({int page = 1}) async {
+    final response = await http.get(Uri.parse('$baseUrl/movie/upcoming?api_key=$apiKey&page=$page'));
+    if (response.statusCode == 200) {
+      final List results = json.decode(response.body)['results'] ?? [];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    }
+    throw Exception('Failed to load upcoming movies');
+  }
+
+  Future<List<Movie>> searchMovies(String query, {int page = 1}) async {
     if (query.trim().isEmpty) return [];
-    final response = await http.get(Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=${Uri.encodeComponent(query)}'));
+    final response = await http.get(Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=${Uri.encodeComponent(query)}&page=$page'));
     if (response.statusCode == 200) {
       final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
@@ -36,10 +63,9 @@ class ApiService {
     throw Exception('Failed to search movies');
   }
 
-  // 1. Genres with page support
   Future<List<Movie>> searchMoviesByGenre(String genreQuery, {int page = 1}) async {
     final genreId = _getGenreId(genreQuery);
-    if (genreId == -1) return searchMovies(genreQuery);
+    if (genreId == -1) return searchMovies(genreQuery, page: page);
 
     final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_genres=$genreId&sort_by=popularity.desc&page=$page'));
     if (response.statusCode == 200) {
@@ -49,7 +75,6 @@ class ApiService {
     throw Exception('Failed to load genre movies');
   }
 
-  // 2. Release Year with page support
   Future<List<Movie>> searchMoviesByYear(String year, {int page = 1}) async {
     final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&primary_release_year=$year&sort_by=popularity.desc&page=$page'));
     if (response.statusCode == 200) {
@@ -59,7 +84,6 @@ class ApiService {
     throw Exception('Failed to load year movies');
   }
 
-  // 3. Languages with page support
   Future<List<Movie>> searchMoviesByLanguage(String langName, {int page = 1}) async {
     final langCode = _getLanguageCode(langName);
     final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_original_language=$langCode&sort_by=popularity.desc&page=$page'));
@@ -70,7 +94,6 @@ class ApiService {
     throw Exception('Failed to load language movies');
   }
 
-  // 4. Curated Collections (Award Winners, Top Box Office, etc.) with page support
   Future<List<Movie>> fetchCuratedCollection(String collectionName, {int page = 1}) async {
     String endpoint = '$baseUrl/discover/movie?api_key=$apiKey&sort_by=popularity.desc&page=$page';
 

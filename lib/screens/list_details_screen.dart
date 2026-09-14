@@ -65,12 +65,23 @@ class _ListDetailsScreenState extends State<ListDetailsScreen> {
       return await _apiService.searchMoviesByGenre(text, page: page);
     } else if (int.tryParse(text) != null) {
       return await _apiService.searchMoviesByYear(text, page: page);
-    } else if (['English', 'Spanish', 'Hindi', 'Korean', 'Japanese', 'French', 'German'].contains(text)) {
-      return await _apiService.searchMoviesByLanguage(text, page: page);
+    } else if (['English', 'Spanish', 'Hindi', 'Korean', 'Japanese', 'French', 'German', 'English Hits', 'Hindi Blockbusters', 'Korean Cinema', 'French Cinema'].contains(text)) {
+      String langQuery = text.replaceAll(' Hits', '').replaceAll(' Blockbusters', '').replaceAll(' Cinema', '');
+      return await _apiService.searchMoviesByLanguage(langQuery, page: page);
     } else if (['Award Winners', 'Top Box Office', 'Critically Acclaimed', 'Indie Darlings', 'Based on a Book'].contains(text)) {
       return await _apiService.fetchCuratedCollection(text, page: page);
+    } else if (text == 'Top Rated' || text == 'Top Rated Masterpieces') {
+      return await _apiService.fetchTopRatedMovies(page: page);
+    } else if (text == 'Now Playing' || text == 'Now Playing in Theaters') {
+      return await _apiService.fetchNowPlayingMovies(page: page);
+    } else if (text == 'Upcoming' || text == 'Coming Soon') {
+      return await _apiService.fetchUpcomingMovies(page: page);
+    } else if (text == 'Trending Now') {
+      return await _apiService.fetchTrendingMovies(page: page);
+    } else if (text == 'Popular' || text == 'Popular on FilmBase') {
+      return await _apiService.fetchPopularMovies(page: page);
     } else {
-      return await _apiService.searchMovies(text);
+      return await _apiService.searchMovies(text, page: page);
     }
   }
 
