@@ -8,109 +8,93 @@ class ApiService {
   static const String apiKey = '1f453dd047f2e300189d00a0ffd4fc8b';
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
 
-  // Fetch trending movies
   Future<List<Movie>> fetchTrendingMovies() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/trending/movie/week?api_key=$apiKey'),
-      headers: {'Content-Type': 'application/json'},
-    );
-
+    final response = await http.get(Uri.parse('$baseUrl/trending/movie/week?api_key=$apiKey'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List results = data['results'] ?? [];
+      final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
     }
-    throw Exception('Failed to load trending movies: ${response.statusCode}');
+    throw Exception('Failed to load trending movies');
   }
 
-  // Fetch popular movies
   Future<List<Movie>> fetchPopularMovies() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/movie/popular?api_key=$apiKey'),
-      headers: {'Content-Type': 'application/json'},
-    );
-
+    final response = await http.get(Uri.parse('$baseUrl/movie/popular?api_key=$apiKey'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List results = data['results'] ?? [];
+      final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
     }
-    throw Exception('Failed to load popular movies: ${response.statusCode}');
+    throw Exception('Failed to load popular movies');
   }
 
-  // General keyword search
   Future<List<Movie>> searchMovies(String query) async {
     if (query.trim().isEmpty) return [];
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=${Uri.encodeComponent(query)}'),
-      headers: {'Content-Type': 'application/json'},
-    );
-
+    final response = await http.get(Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=${Uri.encodeComponent(query)}'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List results = data['results'] ?? [];
+      final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
     }
-    throw Exception('Failed to fetch search results: ${response.statusCode}');
+    throw Exception('Failed to search movies');
   }
 
-  // Search by Genre ID
   Future<List<Movie>> searchMoviesByGenre(String genreQuery) async {
     final genreId = _getGenreId(genreQuery);
     if (genreId == -1) return searchMovies(genreQuery);
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_genres=$genreId&sort_by=popularity.desc'),
-      headers: {'Content-Type': 'application/json'},
-    );
-
+    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_genres=$genreId&sort_by=popularity.desc'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List results = data['results'] ?? [];
+      final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
     }
     throw Exception('Failed to load genre movies');
   }
 
-  // Search by Release Year using Discover endpoint
   Future<List<Movie>> searchMoviesByYear(String year) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&primary_release_year=$year&sort_by=popularity.desc'),
-      headers: {'Content-Type': 'application/json'},
-    );
-
+    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&primary_release_year=$year&sort_by=popularity.desc'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List results = data['results'] ?? [];
+      final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
     }
-    throw Exception('Failed to load movies for year $year');
+    throw Exception('Failed to load year movies');
   }
 
-  // Map genre names to TMDB IDs
-  int _getGenreId(String genreName) {
-    final genreMap = {
-      'action': 28,
-      'adventure': 12,
-      'animation': 16,
-      'comedy': 35,
-      'crime': 80,
-      'documentary': 99,
-      'drama': 18,
-      'family': 10751,
-      'fantasy': 14,
-      'history': 36,
-      'horror': 27,
-      'music': 10402,
-      'mystery': 9648,
-      'romance': 10749,
-      'science fiction': 878,
-      'sci-fi': 878,
-      'thriller': 53,
-      'war': 10752,
-      'western': 37,
-    };
-    return genreMap[genreName.toLowerCase()] ?? -1;
+  // NEW: Filter by original language code (e.g., 'en', 'hi', 'ko')
+  Future<List<Movie>> searchMoviesByLanguage(String langName) async {
+    final langCode = _getLanguageCode(langName);
+    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_original_language=$langCode&sort_by=popularity.desc'));
+    if (response.statusCode == 200) {
+      final List results = json.decode(response.body)['results'] ?? [];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    }
+    throw Exception('Failed to load language movies');
+  }
+
+  // NEW: Handle curated collections via discover parameters (Top Rated, Box Office, etc.)
+  Future<List<Movie>> fetchCuratedCollection(String collectionName) async {
+    String endpoint = '$baseUrl/discover/movie?api_key=$apiKey&sort_by=popularity.desc';
+    
+    if (collectionName == 'Award Winners' || collectionName == 'Critically Acclaimed') {
+      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&vote_average.gte=8.0&vote_count.gte=1000&sort_by=vote_average.desc';
+    } else if (collectionName == 'Top Box Office') {
+      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&sort_by=revenue.desc';
+    } else if (collectionName == 'Indie Darlings') {
+      endpoint = '$baseUrl/discover/movie?api_key=$apiKey&with_genres=18&vote_average.gte=7.5&sort_by=vote_count.asc';
+    }
+
+    final response = await http.get(Uri.parse(endpoint));
+    if (response.statusCode == 200) {
+      final List results = json.decode(response.body)['results'] ?? [];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    }
+    throw Exception('Failed to load collection');
+  }
+
+  int _getGenreId(String name) {
+    final map = {'action': 28, 'adventure': 12, 'animation': 16, 'comedy': 35, 'crime': 80, 'documentary': 99, 'drama': 18, 'family': 10751, 'fantasy': 14, 'history': 36, 'horror': 27, 'music': 10402, 'mystery': 9648, 'romance': 10749, 'science fiction': 878, 'sci-fi': 878, 'thriller': 53, 'war': 10752, 'western': 37};
+    return map[name.toLowerCase()] ?? -1;
+  }
+
+  String _getLanguageCode(String name) {
+    final map = {'english': 'en', 'spanish': 'es', 'hindi': 'hi', 'korean': 'ko', 'japanese': 'ja', 'french': 'fr', 'german': 'de'};
+    return map[name.toLowerCase()] ?? 'en';
   }
 }
