@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/main_screen.dart';
-void main() {
+import 'screens/auth_gate.dart';
+
+void main() async {
+  // Ensure Flutter bindings are initialized before async calls
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase for the current platform (Web in your case)
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const FilmBaseApp());
 }
 
@@ -11,6 +23,7 @@ class FilmBaseApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FilmBase',
+
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -23,7 +36,7 @@ class FilmBaseApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const MainScreen(), // Loads the screen from your new file
+      home: const AuthGate(),
     );
   }
 }

@@ -17,11 +17,14 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<List<Movie>>? _searchResults;
 
-  void _triggerSearch() {
-    FocusScope.of(context).unfocus();
-    if (_searchController.text.trim().isNotEmpty) {
+  void _onSearchChanged(String query) {
+    if (query.trim().isEmpty) {
       setState(() {
-        _searchResults = _apiService.searchMovies(_searchController.text);
+        _searchResults = null;
+      });
+    } else {
+      setState(() {
+        _searchResults = _apiService.searchMovies(query);
       });
     }
   }
@@ -29,25 +32,30 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0E1017),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF0E1017),
         elevation: 0,
         title: TextField(
           controller: _searchController,
-          autofocus: true, // Pops the keyboard up immediately!
+          autofocus: true,
           style: const TextStyle(color: Colors.white, fontSize: 18),
           decoration: const InputDecoration(
             hintText: 'Search movies...',
             hintStyle: TextStyle(color: Colors.white38),
             border: InputBorder.none,
           ),
-          onSubmitted: (_) => _triggerSearch(),
+          onChanged: _onSearchChanged, // Triggers search live as you type
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Color(0xFFE50914)),
-            onPressed: _triggerSearch,
-          )
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.white54),
+              onPressed: () {
+                _searchController.clear();
+                _onSearchChanged('');
+              },
+            )
         ],
       ),
       body: _searchResults == null
@@ -109,7 +117,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
-                      '${movie.year}  •  ⭐ ${movie.rating}',
+                      '${movie.releaseDate}  •  ⭐ ${movie.voteAverage.toStringAsFixed(1)}',
                       style: const TextStyle(color: Colors.white60, fontSize: 13),
                     ),
                   ),

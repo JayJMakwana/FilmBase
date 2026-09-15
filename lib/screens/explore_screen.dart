@@ -37,7 +37,7 @@ class ExploreScreen extends StatelessWidget {
                 child: const TextField(
                   enabled: false, // Disables keyboard here so we route to SearchScreen instead
                   decoration: InputDecoration(
-                    hintText: 'Search movies, TV shows, actors...',
+                    hintText: 'Search Movies, TV shows',
                     hintStyle: TextStyle(color: Colors.white38),
                     prefixIcon: Icon(Icons.search_rounded, color: Colors.white54),
                     suffixIcon: Icon(Icons.mic_none_rounded, color: Colors.white54),

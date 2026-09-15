@@ -1,4 +1,7 @@
+// lib/screens/profile_screen.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -8,30 +11,22 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Local profile state
-  String _userName = 'Film Enthusiast';
+  final AuthService _authService = AuthService();
+
+  // Local default state
   String _favoriteGenre = 'Sci-Fi';
 
-  // Sample static count data (perfectly simplified to just Lists and Distinct Movies)
-  final int _totalLists = 5;
-  final int _distinctMovies = 38;
-
-  // Added 'async' here so the screen can wait for the dialog to close
-  void _showEditProfileDialog() async {
-    final TextEditingController nameController = TextEditingController(text: _userName);
+  void _showEditProfileDialog(String currentName) async {
+    final TextEditingController nameController = TextEditingController(text: currentName);
     final TextEditingController genreController = TextEditingController(text: _favoriteGenre);
 
-    // We wait for the dialog to return a Map of the new strings
     final result = await showDialog<Map<String, String>>(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1A1C24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text(
-            'Edit Profile',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
+          title: const Text('Edit Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -39,10 +34,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 controller: nameController,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: 'Your Name',
+                  labelText: 'Your Username',
                   labelStyle: TextStyle(color: Colors.white54),
-                  hintText: 'e.g. John Doe',
-                  hintStyle: TextStyle(color: Colors.white24),
                   enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
                   focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFE50914))),
                 ),
@@ -52,10 +45,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 controller: genreController,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: 'Favorite Genre / Subgenre',
+                  labelText: 'Favorite Genre',
                   labelStyle: TextStyle(color: Colors.white54),
-                  hintText: 'e.g. Cyberpunk, Neo-Noir, Anime',
-                  hintStyle: TextStyle(color: Colors.white24),
                   enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
                   focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFE50914))),
                 ),
@@ -68,168 +59,204 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE50914),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE50914)),
               onPressed: () {
-                // Instead of setState here, we pop the dialog and pass the data back!
                 Navigator.pop(context, {
                   'name': nameController.text.trim(),
                   'genre': genreController.text.trim(),
                 });
               },
-              child: const Text(
-                'Save',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+              child: const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         );
       },
     );
 
-    // If the user tapped Save (meaning result isn't null), WE update the state here on the main screen
     if (result != null) {
-      setState(() {
+      try {
         if (result['name']!.isNotEmpty) {
-          _userName = result['name']!;
+          // Changed to set with merge: true to ensure the document is created if missing!
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(_authService.currentUserUid)
+              .set({
+            'username': result['name']
+          }, SetOptions(merge: true));
         }
         if (result['genre']!.isNotEmpty) {
-          _favoriteGenre = result['genre']!;
+          setState(() {
+            _favoriteGenre = result['genre']!;
+          });
         }
-      });
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile saved successfully!'), backgroundColor: Colors.green),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error saving: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
     }
+  }
+
+  void _logOut() async {
+    await _authService.logOut();
+    // Navigation is handled automatically by AuthGate sending user back to LoginScreen
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentUid = _authService.currentUserUid;
+
+    if (currentUid == null) {
+      return const Scaffold(body: Center(child: Text("Please log in.")));
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
+      body: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance.collection('users').doc(currentUid).snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+            }
 
-            // Profile Picture & Edit Badge
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                const CircleAvatar(
-                  radius: 48,
-                  backgroundColor: Color(0xFF1A1C24),
-                  child: Icon(Icons.person, size: 54, color: Colors.white70),
-                ),
-                GestureDetector(
-                  onTap: _showEditProfileDialog,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE50914),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.edit, size: 16, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
+            final userData = snapshot.data?.data() as Map<String, dynamic>?;
+            final userName = userData?['username'] ?? 'Film Enthusiast';
+            final userEmail = userData?['email'] ?? '';
 
-            // User Name & Favorite Genre Tag
-            Text(
-              _userName,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Favorite Genre: $_favoriteGenre',
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
-
-            // Edit Profile Button
-            OutlinedButton.icon(
-              onPressed: _showEditProfileDialog,
-              icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.white70),
-              label: const Text('Edit Profile', style: TextStyle(color: Colors.white70, fontSize: 13)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.white24),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Updated Stats Counter Row (Now perfectly balanced with 2 items)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1C24),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Column(
                 children: [
-                  _buildStatItem('Total Lists', '$_totalLists'),
-                  Container(height: 40, width: 1, color: Colors.white12), // Divider
-                  _buildStatItem('Unique Movies', '$_distinctMovies'),
+                  const SizedBox(height: 10),
+
+                  // Profile Picture & Edit Badge
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      const CircleAvatar(
+                        radius: 48,
+                        backgroundColor: Color(0xFF1A1C24),
+                        child: Icon(Icons.person, size: 54, color: Colors.white70),
+                      ),
+                      GestureDetector(
+                        onTap: () => _showEditProfileDialog(userName),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE50914),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.edit, size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // User Name & Email
+                  Text(
+                    userName,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    userEmail,
+                    style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Favorite Genre: $_favoriteGenre',
+                    style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Navigation List Items
+                  _buildProfileOption(
+                    icon: Icons.history_rounded,
+                    title: 'Viewing History',
+                    subtitle: 'Recent trailers and titles browsed',
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: const Color(0xFF1A1C24),
+                          title: const Text('Viewing History', style: TextStyle(color: Colors.white)),
+                          content: const Text('Your recently browsed titles will appear here.', style: TextStyle(color: Colors.white70)),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Close', style: TextStyle(color: Color(0xFFE50914))),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  _buildProfileOption(
+                    icon: Icons.tune_rounded,
+                    title: 'App Preferences',
+                    subtitle: 'Language, region & cache',
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: const Color(0xFF1A1C24),
+                          title: const Text('App Preferences', style: TextStyle(color: Colors.white)),
+                          content: const Text('Dark theme and TMDB data caching are active by default.', style: TextStyle(color: Colors.white70)),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Close', style: TextStyle(color: Color(0xFFE50914))),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  _buildProfileOption(
+                    icon: Icons.info_outline_rounded,
+                    title: 'About FilmBase',
+                    subtitle: 'Version 1.0.0 (SDP Project)',
+                    onTap: () {
+                      showAboutDialog(
+                        context: context,
+                        applicationName: 'FilmBase',
+                        applicationVersion: '1.0.0',
+                        applicationLegalese: 'Powered by the TMDB API',
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // NEW: Log Out Button
+                  _buildProfileOption(
+                    icon: Icons.logout_rounded,
+                    title: 'Log Out',
+                    subtitle: 'Sign out of FilmBase',
+                    iconColor: Colors.redAccent,
+                    onTap: _logOut,
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // Navigation List Items
-            _buildProfileOption(
-              icon: Icons.history_rounded,
-              title: 'Viewing History',
-              subtitle: 'Recent trailers and titles browsed',
-              onTap: () {},
-            ),
-            _buildProfileOption(
-              icon: Icons.tune_rounded,
-              title: 'App Preferences',
-              subtitle: 'Language, region & cache',
-              onTap: () {},
-            ),
-            // Look for this block near the bottom of your ProfileScreen
-            _buildProfileOption(
-              icon: Icons.info_outline_rounded,
-              title: 'About FilmBase',
-              subtitle: 'Version 1.0.0 (SDP Project)',
-              onTap: () {
-                showAboutDialog(
-                  context: context,
-                  applicationName: 'FilmBase',
-                  applicationVersion: '1.0.0',
-                  // UPDATED TO REFLECT YOUR NEW LIVE DATA SOURCE
-                  applicationLegalese: 'Powered by the Simkl API',
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
+            );
+          }
       ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: Colors.white54),
-        ),
-      ],
     );
   }
 
@@ -238,6 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color iconColor = const Color(0xFFE50914),
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -252,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: const Color(0xFFE50914)),
+          child: Icon(icon, color: iconColor),
         ),
         title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
         subtitle: Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 12)),

@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/movie.dart';
+import '../models/cast.dart';
 
 class ApiService {
   static const String baseUrl = 'https://api.themoviedb.org/3';
@@ -53,14 +54,32 @@ class ApiService {
     throw Exception('Failed to load upcoming movies');
   }
 
+  // Search across both Movies and TV Shows using TMDB Multi-Search
   Future<List<Movie>> searchMovies(String query, {int page = 1}) async {
-    if (query.trim().isEmpty) return [];
-    final response = await http.get(Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=${Uri.encodeComponent(query)}&page=$page'));
-    if (response.statusCode == 200) {
-      final List results = json.decode(response.body)['results'] ?? [];
-      return results.map((json) => Movie.fromJson(json)).toList();
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.themoviedb.org/3/search/multi?api_key=$apiKey&query=${Uri.encodeComponent(query)}&page=$page&include_adult=true'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final results = data['results'] as List;
+
+        return results
+            .where((item) => item['media_type'] == 'movie' || item['media_type'] == 'tv')
+            .map((jsonMap) {
+          if (jsonMap['media_type'] == 'tv') {
+            jsonMap['title'] = jsonMap['name'];
+            jsonMap['release_date'] = jsonMap['first_air_date'] ?? '';
+          }
+          return Movie.fromJson(jsonMap);
+        })
+            .toList();
+      }
+    } catch (e) {
+      print('Error searching: $e');
     }
-    throw Exception('Failed to search movies');
+    return [];
   }
 
   Future<List<Movie>> searchMoviesByGenre(String genreQuery, {int page = 1}) async {
@@ -121,5 +140,36 @@ class ApiService {
   String _getLanguageCode(String name) {
     final map = {'english': 'en', 'spanish': 'es', 'hindi': 'hi', 'korean': 'ko', 'japanese': 'ja', 'french': 'fr', 'german': 'de'};
     return map[name.toLowerCase()] ?? 'en';
+  }
+
+  Future<List<Cast>> getMovieCast(int movieId) async {
+    final String url = 'https://api.themoviedb.org/3/movie/$movieId/credits?api_key=1f453dd047f2e300189d00a0ffd4fc8b';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List castList = data['cast'] ?? [];
+        return castList.take(10).map((json) => Cast.fromJson(json)).toList();
+      }
+    } catch (e) {
+      print('Error fetching cast: $e');
+    }
+    return [];
+  }
+  // Fetch a single movie's full details by its TMDB ID
+  Future<Movie?> fetchMovieDetails(int movieId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.themoviedb.org/3/movie/$movieId?api_key=$apiKey'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return Movie.fromJson(data);
+      }
+    } catch (e) {
+      print('Error fetching movie details: $e');
+    }
+    return null;
   }
 }

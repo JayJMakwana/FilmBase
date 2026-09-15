@@ -4,6 +4,8 @@ import '../models/movie.dart';
 import '../services/api_service.dart';
 import 'movie_details_screen.dart';
 import 'list_details_screen.dart';
+import 'friends_screen.dart';
+import 'my_lists_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -43,6 +45,38 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0E1017),
+      // --- ADDED APP BAR START ---
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0E1017),
+        elevation: 0,
+        title: const Text(
+          'FilmBase',
+          style: TextStyle(
+            color: Color(0xFFE50914),
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            letterSpacing: 1.2,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bookmarks, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MyListsScreen()),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FriendsScreen()),
+            ),
+          ),
+          const SizedBox(width: 8), // Small padding on the right edge
+        ],
+      ),
+      // --- ADDED APP BAR END ---
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         height: 320,
         width: double.infinity,
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 16), // Adjusted to match screen edges better with AppBar
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           image: DecorationImage(image: NetworkImage(movie.posterUrl), fit: BoxFit.cover),

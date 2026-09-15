@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "37694562724",
+    "project_id": "filmbase-7848a",
+    "storage_bucket": "filmbase-7848a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:37694562724:android:9c92fe269735304796a131",
+        "android_client_info": {
+          "package_name": "com.example.filmbase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2uZFVn4_ekX2zjI3_1tl_G9XgXlPL7n8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
