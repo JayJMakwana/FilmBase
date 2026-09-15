@@ -45,19 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0E1017),
-      // --- ADDED APP BAR START ---
       appBar: AppBar(
         backgroundColor: const Color(0xFF0E1017),
         elevation: 0,
-        title: const Text(
-          'FilmBase',
-          style: TextStyle(
-            color: Color(0xFFE50914),
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-            letterSpacing: 1.2,
-          ),
-        ),
+        title: const SizedBox.shrink(), // Removes the duplicate title text entirely
         actions: [
           IconButton(
             icon: const Icon(Icons.bookmarks, color: Colors.white),
@@ -73,10 +64,9 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (context) => const FriendsScreen()),
             ),
           ),
-          const SizedBox(width: 8), // Small padding on the right edge
+          const SizedBox(width: 8),
         ],
       ),
-      // --- ADDED APP BAR END ---
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
