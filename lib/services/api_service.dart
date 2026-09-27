@@ -5,12 +5,13 @@ import '../models/movie.dart';
 import '../models/cast.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://api.themoviedb.org/3';
+  static const String proxyDomain = 'https://filmbase-proxy.jaym15993.workers.dev';
+  static const String baseUrl = '$proxyDomain/3';
   static const String apiKey = '1f453dd047f2e300189d00a0ffd4fc8b';
-  static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
+  static const String imageBaseUrl = '$proxyDomain/t/p/w500';
 
   Future<List<Movie>> fetchTrendingMovies({int page = 1}) async {
-    final response = await http.get(Uri.parse('$baseUrl/trending/movie/week?api_key=$apiKey&page=$page'));
+    final response = await http.get(Uri.parse('$baseUrl/trending/movie/day?api_key=$apiKey&page=$page'));
     if (response.statusCode == 200) {
       final List results = json.decode(response.body)['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
@@ -58,7 +59,7 @@ class ApiService {
   Future<List<Movie>> searchMovies(String query, {int page = 1}) async {
     try {
       final response = await http.get(
-        Uri.parse('https://api.themoviedb.org/3/search/multi?api_key=$apiKey&query=${Uri.encodeComponent(query)}&page=$page&include_adult=true'),
+        Uri.parse('$baseUrl/search/multi?api_key=$apiKey&query=${Uri.encodeComponent(query)}&page=$page&include_adult=true'),
       );
 
       if (response.statusCode == 200) {
@@ -73,8 +74,7 @@ class ApiService {
             jsonMap['release_date'] = jsonMap['first_air_date'] ?? '';
           }
           return Movie.fromJson(jsonMap);
-        })
-            .toList();
+        }).toList();
       }
     } catch (e) {
       print('Error searching: $e');
@@ -133,17 +133,30 @@ class ApiService {
   }
 
   int _getGenreId(String name) {
-    final map = {'action': 28, 'adventure': 12, 'animation': 16, 'comedy': 35, 'crime': 80, 'documentary': 99, 'drama': 18, 'family': 10751, 'fantasy': 14, 'history': 36, 'horror': 27, 'music': 10402, 'mystery': 9648, 'romance': 10749, 'science fiction': 878, 'sci-fi': 878, 'thriller': 53, 'war': 10752, 'western': 37};
+    final map = {
+      'action': 28, 'adventure': 12, 'animation': 16, 'comedy': 35,
+      'crime': 80, 'documentary': 99, 'drama': 18, 'family': 10751,
+      'fantasy': 14, 'history': 36, 'horror': 27, 'music': 10402,
+      'mystery': 9648, 'romance': 10749, 'science fiction': 878,
+      'sci-fi': 878, 'thriller': 53, 'war': 10752, 'western': 37
+    };
     return map[name.toLowerCase()] ?? -1;
   }
 
   String _getLanguageCode(String name) {
-    final map = {'english': 'en', 'spanish': 'es', 'hindi': 'hi', 'korean': 'ko', 'japanese': 'ja', 'french': 'fr', 'german': 'de'};
-    return map[name.toLowerCase()] ?? 'en';
+    final map = {
+      'english': 'en', 'spanish': 'es', 'hindi': 'hi',
+      'korean': 'ko', 'japanese': 'ja', 'french': 'fr',
+      'german': 'de', 'italian': 'it', 'tamil': 'ta',
+      'telugu': 'te', 'malayalam': 'ml', 'chinese': 'zh',
+      'russian': 'ru', 'portuguese': 'pt', 'urdu': 'ur',
+      'gujarati': 'gu',
+    };
+    return map[name.trim().toLowerCase()] ?? name.trim().toLowerCase();
   }
 
   Future<List<Cast>> getMovieCast(int movieId) async {
-    final String url = 'https://api.themoviedb.org/3/movie/$movieId/credits?api_key=1f453dd047f2e300189d00a0ffd4fc8b';
+    final String url = '$baseUrl/movie/$movieId/credits?api_key=$apiKey';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -156,11 +169,12 @@ class ApiService {
     }
     return [];
   }
+
   // Fetch a single movie's full details by its TMDB ID
   Future<Movie?> fetchMovieDetails(int movieId) async {
     try {
       final response = await http.get(
-        Uri.parse('https://api.themoviedb.org/3/movie/$movieId?api_key=$apiKey'),
+        Uri.parse('$baseUrl/movie/$movieId?api_key=$apiKey'),
       );
 
       if (response.statusCode == 200) {
