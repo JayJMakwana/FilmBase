@@ -76,7 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (result != null) {
       try {
         if (result['name']!.isNotEmpty) {
-          // Changed to set with merge: true to ensure the document is created if missing!
           await FirebaseFirestore.instance
               .collection('users')
               .doc(_authService.currentUserUid)
@@ -90,7 +89,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           });
         }
 
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile saved successfully!'), backgroundColor: Colors.green),
@@ -108,7 +106,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _logOut() async {
     await _authService.logOut();
-    // Navigation is handled automatically by AuthGate sending user back to LoginScreen
   }
 
   @override
@@ -183,28 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Navigation List Items
-                  _buildProfileOption(
-                    icon: Icons.history_rounded,
-                    title: 'Viewing History',
-                    subtitle: 'Recent trailers and titles browsed',
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor: const Color(0xFF1A1C24),
-                          title: const Text('Viewing History', style: TextStyle(color: Colors.white)),
-                          content: const Text('Your recently browsed titles will appear here.', style: TextStyle(color: Colors.white70)),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Close', style: TextStyle(color: Color(0xFFE50914))),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                  // Navigation List Items (Viewing History removed)
                   _buildProfileOption(
                     icon: Icons.tune_rounded,
                     title: 'App Preferences',
@@ -243,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const SizedBox(height: 20),
 
-                  // NEW: Log Out Button
+                  // Log Out Button
                   _buildProfileOption(
                     icon: Icons.logout_rounded,
                     title: 'Log Out',
