@@ -6,7 +6,9 @@ import '../services/database_service.dart';
 import '../models/movie.dart';
 import 'movie_details_screen.dart';
 
-class UserListMoviesScreen extends StatelessWidget {
+enum MovieSortOption { newest, oldest, az, za }
+
+class UserListMoviesScreen extends StatefulWidget {
   final String userId;
   final String listId;
   final String listName;
@@ -19,10 +21,16 @@ class UserListMoviesScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final DatabaseService dbService = DatabaseService();
+  State<UserListMoviesScreen> createState() => _UserListMoviesScreenState();
+}
 
-    // Responsive grid logic (same as ListDetailsScreen)
+class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
+  final DatabaseService _dbService = DatabaseService();
+  MovieSortOption _currentSort = MovieSortOption.newest; // Default sorting state
+
+  @override
+  Widget build(BuildContext context) {
+    // Responsive grid logic
     double screenWidth = MediaQuery.of(context).size.width;
     int columns = 2;
     if (screenWidth > 1400) {
@@ -45,12 +53,42 @@ class UserListMoviesScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0E1017),
       appBar: AppBar(
-        title: Text(listName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(widget.listName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF1A1C24),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          PopupMenuButton<MovieSortOption>(
+            icon: const Icon(Icons.sort, color: Colors.white),
+            color: const Color(0xFF1A1C24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            onSelected: (MovieSortOption result) {
+              setState(() {
+                _currentSort = result;
+              });
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<MovieSortOption>>[
+              const PopupMenuItem<MovieSortOption>(
+                value: MovieSortOption.newest,
+                child: Text('Recently Added', style: TextStyle(color: Colors.white)),
+              ),
+              const PopupMenuItem<MovieSortOption>(
+                value: MovieSortOption.oldest,
+                child: Text('Oldest Added', style: TextStyle(color: Colors.white)),
+              ),
+              const PopupMenuItem<MovieSortOption>(
+                value: MovieSortOption.az,
+                child: Text('A - Z', style: TextStyle(color: Colors.white)),
+              ),
+              const PopupMenuItem<MovieSortOption>(
+                value: MovieSortOption.za,
+                child: Text('Z - A', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: dbService.getMoviesInList(userId, listId),
+        stream: _dbService.getMoviesInList(widget.userId, widget.listId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
@@ -63,13 +101,38 @@ class UserListMoviesScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.movie_filter_outlined, size: 64, color: Colors.white38),
                   const SizedBox(height: 16),
-                  Text('No movies in $listName yet.', style: const TextStyle(color: Colors.white54, fontSize: 16)),
+                  Text('No movies in ${widget.listName} yet.', style: const TextStyle(color: Colors.white54, fontSize: 16)),
                 ],
               ),
             );
           }
 
-          final movies = snapshot.data!.docs;
+          // Convert Firestore docs to a standard list for local sorting
+          List<QueryDocumentSnapshot> sortedMovies = snapshot.data!.docs.toList();
+
+          // Apply local sorting logic based on the user's selection
+          sortedMovies.sort((a, b) {
+            final dataA = a.data() as Map<String, dynamic>;
+            final dataB = b.data() as Map<String, dynamic>;
+
+            final titleA = (dataA['title'] ?? '').toString().toLowerCase();
+            final titleB = (dataB['title'] ?? '').toString().toLowerCase();
+
+            final timeA = (dataA['addedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+            final timeB = (dataB['addedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+
+            switch (_currentSort) {
+              case MovieSortOption.az:
+                return titleA.compareTo(titleB);
+              case MovieSortOption.za:
+                return titleB.compareTo(titleA);
+              case MovieSortOption.oldest:
+                return timeA.compareTo(timeB);
+              case MovieSortOption.newest:
+              default:
+                return timeB.compareTo(timeA); // Descending (Newest first)
+            }
+          });
 
           return GridView.builder(
             padding: const EdgeInsets.all(16),
@@ -79,9 +142,9 @@ class UserListMoviesScreen extends StatelessWidget {
               crossAxisSpacing: 12,
               mainAxisSpacing: 16,
             ),
-            itemCount: movies.length,
+            itemCount: sortedMovies.length,
             itemBuilder: (context, index) {
-              final movieData = movies[index].data() as Map<String, dynamic>;
+              final movieData = sortedMovies[index].data() as Map<String, dynamic>;
 
               String rawPath = movieData['posterPath'] ?? '';
               String imageUrl = rawPath.startsWith('http')

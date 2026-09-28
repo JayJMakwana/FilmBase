@@ -1,9 +1,10 @@
+// lib/models/movie.dart
 class Movie {
   final int id;
   final String title;
   final String overview;
   final String posterPath;
-  final String? backdropPath; // Add this
+  final String? backdropPath;
   final String releaseDate;
   final double voteAverage;
 
@@ -23,18 +24,21 @@ class Movie {
       title: json['title'] ?? 'No Title',
       overview: json['overview'] ?? 'No overview available.',
       posterPath: json['poster_path'] ?? '',
-      backdropPath: json['backdrop_path'], // Parse backdrop
+      backdropPath: json['backdrop_path'],
       releaseDate: json['release_date'] ?? '2026',
       voteAverage: (json['vote_average'] ?? 0.0).toDouble(),
     );
   }
 
+  // Proxy base for images to bypass college network blocks
+  static const String _proxyImageBase = 'https://filmbase-proxy.jaym15993.workers.dev/t/p';
+
   String get posterUrl => posterPath.isNotEmpty
-      ? 'https://image.tmdb.org/t/p/w500$posterPath'
+      ? '$_proxyImageBase/w500$posterPath'
       : '';
 
-  // Add a getter for the landscape backdrop
+  // Getter for the landscape backdrop routed through proxy
   String get backdropUrl => backdropPath != null && backdropPath!.isNotEmpty
-      ? 'https://image.tmdb.org/t/p/w780$backdropPath'
+      ? '$_proxyImageBase/w780$backdropPath'
       : posterUrl; // Fallback to poster if backdrop is missing
 }
