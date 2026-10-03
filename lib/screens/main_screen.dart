@@ -1,9 +1,10 @@
+// lib/screens/main_screen.dart
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'explore_screen.dart';
 import 'watchlist_screen.dart';
 import 'profile_screen.dart';
-import 'search_screen.dart'; // Importing your new search screen
+import 'search_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,7 +16,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // Using your actual existing screens here
   final List<Widget> _screens = [
     const HomeScreen(),
     const ExploreScreen(),
@@ -26,35 +26,30 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Adding a global app bar with a search icon that opens your new SearchScreen
-      appBar: AppBar(
-        title: const Text('FilmBase', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SearchScreen()),
-              );
-            },
-          )
-        ],
-      ),
+      backgroundColor: const Color(0xFF0A0C10),
       body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: Colors.amber, // Optional: highlight color for active tab
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Watchlist'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF14161F),
+          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06), width: 1)),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          onTap: (index) => setState(() => _currentIndex = index),
+          selectedItemColor: const Color(0xFFE50914),
+          unselectedItemColor: Colors.white.withOpacity(0.4),
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Explore'),
+            BottomNavigationBarItem(icon: Icon(Icons.bookmark_rounded), label: 'Watchlist'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
+          ],
+        ),
       ),
     );
   }

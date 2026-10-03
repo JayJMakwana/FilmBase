@@ -44,58 +44,78 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0E1017),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0E1017),
-        elevation: 0,
-        title: const SizedBox.shrink(), // Removes the duplicate title text entirely
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bookmarks, color: Colors.white),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MyListsScreen()),
+      backgroundColor: const Color(0xFF0A0C10),
+      body: Stack(
+        children: [
+          Positioned(
+            top: -150,
+            left: 50,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFE50914).withOpacity(0.08)),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const FriendsScreen()),
+          SafeArea(
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  floating: true,
+                  title: const SizedBox.shrink(),
+                  actions: [
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(color: const Color(0xFF14161F), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.1))),
+                      child: IconButton(
+                        icon: const Icon(Icons.bookmarks_rounded, color: Colors.white, size: 22),
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyListsScreen())),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(right: 16),
+                      decoration: BoxDecoration(color: const Color(0xFF14161F), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.1))),
+                      child: IconButton(
+                        icon: const Icon(Icons.person_add_rounded, color: Colors.white, size: 22),
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FriendsScreen())),
+                      ),
+                    ),
+                  ],
+                ),
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      FutureBuilder<List<Movie>>(
+                        future: _trendingFuture,
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return const SizedBox(height: 320, child: Center(child: CircularProgressIndicator(color: Color(0xFFE50914))));
+                          }
+                          return _buildFeaturedBanner(context, snapshot.data!.first);
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      _buildMovieRow('Trending Now', _trendingFuture, 'Trending Now'),
+                      _buildMovieRow('Popular on FilmBase', _popularFuture, 'Popular'),
+                      _buildMovieRow('Top Rated Masterpieces', _topRatedFuture, 'Top Rated'),
+                      _buildMovieRow('Now Playing in Theaters', _nowPlayingFuture, 'Now Playing'),
+                      _buildMovieRow('Hindi Blockbusters', _hindiFuture, 'Hindi'),
+                      _buildMovieRow('Hollywood English Hits', _englishFuture, 'English'),
+                      _buildMovieRow('Korean Cinema', _koreanFuture, 'Korean'),
+                      _buildMovieRow('French Cinema', _frenchFuture, 'French'),
+                      _buildMovieRow('Coming Soon', _upcomingFuture, 'Upcoming'),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
         ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FutureBuilder<List<Movie>>(
-              future: _trendingFuture,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const SizedBox(height: 250, child: Center(child: CircularProgressIndicator()));
-                }
-                final featured = snapshot.data!.first;
-                return _buildFeaturedBanner(context, featured);
-              },
-            ),
-            const SizedBox(height: 24),
-
-            _buildMovieRow('Trending Now', _trendingFuture, 'Trending Now'),
-            _buildMovieRow('Popular on FilmBase', _popularFuture, 'Popular'),
-            _buildMovieRow('Top Rated Masterpieces', _topRatedFuture, 'Top Rated'),
-            _buildMovieRow('Now Playing in Theaters', _nowPlayingFuture, 'Now Playing'),
-            _buildMovieRow('Hindi Blockbusters', _hindiFuture, 'Hindi'),
-            _buildMovieRow('Hollywood English Hits', _englishFuture, 'English'),
-            _buildMovieRow('Korean Cinema', _koreanFuture, 'Korean'),
-            _buildMovieRow('French Cinema', _frenchFuture, 'French'),
-            _buildMovieRow('Coming Soon', _upcomingFuture, 'Upcoming'),
-
-            const SizedBox(height: 40),
-          ],
-        ),
       ),
     );
   }
@@ -104,35 +124,41 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: movie))),
       child: Container(
-        height: 320,
+        height: 340,
         width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 16), // Adjusted to match screen edges better with AppBar
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 10))],
           image: DecorationImage(image: NetworkImage(movie.posterUrl), fit: BoxFit.cover),
         ),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
             gradient: const LinearGradient(
-              colors: [Colors.transparent, Colors.black87],
+              colors: [Colors.transparent, Color(0xFF0A0C10)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
+              stops: [0.3, 1.0],
             ),
           ),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           alignment: Alignment.bottomLeft,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFFE50914), borderRadius: BorderRadius.circular(4)),
-                child: const Text('FEATURED SPOTLIGHT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE50914).withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('FEATURED SPOTLIGHT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.0)),
               ),
-              const SizedBox(height: 8),
-              Text(movie.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 12),
+              Text(movie.title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5, height: 1.1)),
             ],
           ),
         ),
@@ -145,17 +171,17 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.2)),
               GestureDetector(
                 onTap: () async {
-                  // Show loading dialog while fetching page 1 for the full grid view
                   showDialog(
                     context: context,
                     barrierDismissible: false,
+                    barrierColor: Colors.black54,
                     builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFFE50914))),
                   );
 
@@ -163,56 +189,56 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (!context.mounted) return;
                   Navigator.pop(context);
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ListDetailsScreen(listName: categoryKey, movies: movies),
-                    ),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => ListDetailsScreen(listName: categoryKey, movies: movies)));
                 },
-                child: const Text('See all', style: TextStyle(fontSize: 14, color: Color(0xFFE50914), fontWeight: FontWeight.w600)),
+                child: const Text('See all', style: TextStyle(fontSize: 14, color: Color(0xFFE50914), fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         ),
         SizedBox(
-          height: 200,
+          height: 210,
           child: FutureBuilder<List<Movie>>(
             future: future,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No movies available', style: TextStyle(color: Colors.white54)));
-              }
+              if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+              if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text('No movies available', style: TextStyle(color: Colors.white54)));
+
               final movies = snapshot.data!;
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: movies.length,
                 itemBuilder: (context, index) {
                   final movie = movies[index];
                   return GestureDetector(
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: movie))),
                     child: Container(
-                      width: 120,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 125,
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(movie.posterUrl, fit: BoxFit.cover, width: double.infinity),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.white.withOpacity(0.08), width: 1),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(13),
+                                child: Image.network(movie.posterUrl, fit: BoxFit.cover, width: double.infinity, errorBuilder: (c,e,s) => Container(color: const Color(0xFF14161F), child: const Icon(Icons.broken_image, color: Colors.white24))),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           Text(
                             movie.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
                           ),
                         ],
                       ),
