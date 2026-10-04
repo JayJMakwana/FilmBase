@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/database_service.dart';
 import '../models/movie.dart';
+import '../theme/filmbase_theme.dart';
+import '../widgets/cinematic_chrome.dart';
 import 'movie_details_screen.dart';
 
 enum MovieSortOption { newest, oldest, az, za }
@@ -35,77 +37,45 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
     double childAspectRatio = columns >= 5 ? 0.6 : columns == 4 ? 0.57 : columns == 3 ? 0.58 : 0.55;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0C10), // Crisp dark background
+      backgroundColor: FilmbaseColors.canvas,
       body: Stack(
         children: [
-          // Subtle background gradient glow
-          Positioned(
-            top: -100,
-            left: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFE50914).withOpacity(0.08)),
-            ),
-          ),
+          const GlowBackdrop(fromRight: false),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Custom Modern Header with Back Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-                          onPressed: () => Navigator.pop(context),
-                        ),
+                ScreenHeader(
+                  title: widget.listName,
+                  showBack: true,
+                  actions: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: FilmbaseColors.hairline),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          widget.listName,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      child: PopupMenuButton<MovieSortOption>(
+                        icon: const Icon(Icons.sort_rounded, color: FilmbaseColors.text, size: 20),
+                        color: FilmbaseColors.elevated,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: FilmbaseColors.hairline)),
+                        onSelected: (result) => setState(() => _currentSort = result),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(value: MovieSortOption.newest, child: Text('Recently Added', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: MovieSortOption.oldest, child: Text('Oldest Added', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: MovieSortOption.az, child: Text('A - Z', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: MovieSortOption.za, child: Text('Z - A', style: TextStyle(color: FilmbaseColors.text))),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: PopupMenuButton<MovieSortOption>(
-                          icon: const Icon(Icons.sort_rounded, color: Colors.white, size: 20),
-                          color: const Color(0xFF14161F),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withOpacity(0.1))),
-                          onSelected: (result) => setState(() => _currentSort = result),
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(value: MovieSortOption.newest, child: Text('Recently Added', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: MovieSortOption.oldest, child: Text('Oldest Added', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: MovieSortOption.az, child: Text('A - Z', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: MovieSortOption.za, child: Text('Z - A', style: TextStyle(color: Colors.white))),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: _dbService.getMoviesInList(widget.userId, widget.listId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+                        return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
                       }
 
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -113,9 +83,9 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.movie_filter_rounded, size: 80, color: Colors.white.withOpacity(0.1)),
+                              Icon(Icons.movie_filter_rounded, size: 80, color: Colors.white.withValues(alpha: 0.1)),
                               const SizedBox(height: 16),
-                              Text('No movies in ${widget.listName}.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white.withOpacity(0.8))),
+                              Text('No movies in ${widget.listName}.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.8))),
                             ],
                           ),
                         );
@@ -160,7 +130,7 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                                 context: context,
                                 barrierDismissible: false,
                                 barrierColor: Colors.black54,
-                                builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFFE50914))),
+                                builder: (_) => const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent)),
                               );
 
                               final ApiService apiService = ApiService();
@@ -177,20 +147,20 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                             },
                             child: Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: FilmbaseColors.hairline),
                                 boxShadow: [
-                                  BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                                  BoxShadow(color: Colors.black.withValues(alpha: 0.38), blurRadius: 14, offset: const Offset(0, 7)),
                                 ],
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(13),
+                                borderRadius: BorderRadius.circular(15),
                                 child: Image.network(
                                   imageUrl,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) => Container(
-                                    color: const Color(0xFF14161F),
-                                    child: Icon(Icons.broken_image_rounded, size: 40, color: Colors.white.withOpacity(0.2)),
+                                    color: FilmbaseColors.surface,
+                                    child: Icon(Icons.broken_image_rounded, size: 40, color: Colors.white.withValues(alpha: 0.2)),
                                   ),
                                 ),
                               ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'screens/main_screen.dart';
 import 'screens/auth_gate.dart';
+import 'theme/filmbase_theme.dart';
 
 void main() async {
   // Ensure Flutter bindings are initialized before async calls
@@ -25,17 +25,7 @@ class FilmBaseApp extends StatelessWidget {
       title: 'FilmBase',
 
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F1016),
-        primaryColor: const Color(0xFFE50914),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFE50914),
-          secondary: Color(0xFFFFB800),
-          surface: Color(0xFF1A1C24),
-        ),
-        useMaterial3: true,
-      ),
+      theme: FilmbaseTheme.dark,
       home: const AuthGate(),
     );
   }

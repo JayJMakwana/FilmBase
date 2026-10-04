@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/movie.dart';
+import '../theme/filmbase_theme.dart';
+import '../widgets/cinematic_chrome.dart';
 import 'search_screen.dart';
 import 'list_details_screen.dart';
 
@@ -12,26 +14,15 @@ class ExploreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0C10),
+      backgroundColor: FilmbaseColors.canvas,
       body: Stack(
         children: [
-          Positioned(
-            top: -100,
-            left: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFF0055FF).withOpacity(0.06)),
-            ),
-          ),
+          const GlowBackdrop(color: Color(0xFF0055FF), fromRight: false),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                  child: Text('Explore', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)),
-                ),
+                const ScreenHeader(title: 'Explore'),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -39,16 +30,18 @@ class ExploreScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Search Bar
                         GestureDetector(
                           onTap: () {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen()));
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF14161F),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white.withOpacity(0.06), width: 1),
+                              color: FilmbaseColors.surface,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: FilmbaseColors.hairline),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 6)),
+                              ],
                             ),
                             child: const TextField(
                               enabled: false,
@@ -58,6 +51,9 @@ class ExploreScreen extends StatelessWidget {
                                 prefixIcon: Icon(Icons.search_rounded, color: Colors.white54),
                                 suffixIcon: Icon(Icons.mic_none_rounded, color: Colors.white54),
                                 border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                filled: false,
                                 contentPadding: EdgeInsets.symmetric(vertical: 16),
                               ),
                             ),
@@ -119,11 +115,11 @@ class ExploreScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.2)),
+        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: FilmbaseColors.text, letterSpacing: -0.2)),
         const SizedBox(height: 16),
         Wrap(
-          spacing: 12,
-          runSpacing: 14,
+          spacing: 10,
+          runSpacing: 12,
           children: [
             ...items.map((item) => _buildBubble(context, item, sectionTitle: title, isGenre: isGenre)),
             if (showSeeMore) _buildBubble(context, 'See more', sectionTitle: title, isSeeMore: true),
@@ -138,7 +134,7 @@ class ExploreScreen extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black54,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFE50914))),
+      builder: (context) => const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent)),
     );
 
     try {
@@ -169,23 +165,18 @@ class ExploreScreen extends StatelessWidget {
       builder: (dialogCtx) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF14161F),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.white.withOpacity(0.1))),
-          title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          backgroundColor: FilmbaseColors.elevated,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: const BorderSide(color: FilmbaseColors.hairline)),
+          title: Text(title, style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold, fontSize: 18)),
           content: TextField(
             controller: textController,
             keyboardType: keyboardType,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: FilmbaseColors.text),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
               prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.05),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE50914), width: 1.5)),
+              fillColor: Colors.white.withValues(alpha: 0.05),
             ),
             onSubmitted: (value) {
               if (value.trim().isNotEmpty) {
@@ -197,10 +188,10 @@ class ExploreScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
-              child: Text('Cancel', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+              child: Text('Cancel', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE50914), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              style: ElevatedButton.styleFrom(backgroundColor: FilmbaseColors.accent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               onPressed: () {
                 final value = textController.text.trim();
                 if (value.isNotEmpty) {
@@ -242,14 +233,14 @@ class ExploreScreen extends StatelessWidget {
           else return apiService.searchMovies(text);
         });
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         decoration: BoxDecoration(
-          color: isSeeMore ? Colors.transparent : const Color(0xFF14161F),
-          border: Border.all(color: isSeeMore ? const Color(0xFFE50914) : Colors.white.withOpacity(0.1)),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: isSeeMore ? [] : [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))],
+          color: isSeeMore ? Colors.transparent : FilmbaseColors.surface,
+          border: Border.all(color: isSeeMore ? FilmbaseColors.accent : FilmbaseColors.hairline),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: isSeeMore ? [] : [BoxShadow(color: Colors.black.withValues(alpha: 0.22), blurRadius: 8, offset: const Offset(0, 4))],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -257,14 +248,14 @@ class ExploreScreen extends StatelessWidget {
             Text(
               text,
               style: TextStyle(
-                color: isSeeMore ? const Color(0xFFE50914) : Colors.white.withOpacity(0.9),
+                color: isSeeMore ? FilmbaseColors.accent : Colors.white.withValues(alpha: 0.9),
                 fontSize: 14,
                 fontWeight: isSeeMore ? FontWeight.bold : FontWeight.w600,
               ),
             ),
             if (isSeeMore) ...[
               const SizedBox(width: 4),
-              const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFFE50914)),
+              const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: FilmbaseColors.accent),
             ]
           ],
         ),

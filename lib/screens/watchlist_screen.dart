@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../theme/filmbase_theme.dart';
+import '../widgets/cinematic_chrome.dart';
 import 'user_list_movies_screen.dart';
 
 enum ListSortOption { newest, oldest, az, za }
@@ -30,34 +32,24 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: AlertDialog(
-            backgroundColor: const Color(0xFF14161F),
+            backgroundColor: FilmbaseColors.elevated,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: Colors.white.withOpacity(0.1)),
+              side: const BorderSide(color: FilmbaseColors.hairline),
             ),
-            title: const Text('Create New List', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            title: const Text('Create New List', style: TextStyle(color: FilmbaseColors.text, fontSize: 22, fontWeight: FontWeight.bold)),
             content: TextField(
               controller: listController,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: const TextStyle(color: FilmbaseColors.text, fontSize: 18),
               decoration: InputDecoration(
                 hintText: 'e.g. Weekend Binge',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE50914), width: 1.5),
-                ),
+                fillColor: Colors.white.withValues(alpha: 0.05),
               ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Cancel', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                child: Text('Cancel', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
               ),
               Container(
                 decoration: BoxDecoration(
@@ -97,30 +89,27 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: AlertDialog(
-            backgroundColor: const Color(0xFF14161F),
+            backgroundColor: FilmbaseColors.elevated,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: Colors.white.withOpacity(0.1)),
+              side: const BorderSide(color: FilmbaseColors.hairline),
             ),
-            title: const Text('Rename List', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            title: const Text('Rename List', style: TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold)),
             content: TextField(
               controller: controller,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: FilmbaseColors.text),
               decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE50914))),
+                fillColor: Colors.white.withValues(alpha: 0.05),
               ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text('Cancel', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                child: Text('Cancel', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE50914),
+                  backgroundColor: FilmbaseColors.accent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () async {
@@ -147,24 +136,24 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: AlertDialog(
-            backgroundColor: const Color(0xFF14161F),
+            backgroundColor: FilmbaseColors.elevated,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: Colors.white.withOpacity(0.1)),
+              side: const BorderSide(color: FilmbaseColors.hairline),
             ),
-            title: const Text('Delete List', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            title: const Text('Delete List', style: TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold)),
             content: Text(
               'Are you sure you want to delete "$listName"?\nThis action cannot be undone.',
-              style: TextStyle(color: Colors.white.withOpacity(0.7), height: 1.5),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), height: 1.5),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text('Cancel', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                child: Text('Cancel', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withOpacity(0.8),
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () async {
@@ -209,60 +198,44 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     if (currentUid == null) return const Scaffold(body: Center(child: Text("Please log in.")));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0C10), // Crisp dark background
+      backgroundColor: FilmbaseColors.canvas,
       body: Stack(
         children: [
-          // Subtle background gradient glow
-          Positioned(
-            top: -100,
-            right: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFE50914).withOpacity(0.1)),
-            ),
-          ),
+          const GlowBackdrop(),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'My Library',
-                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
+                ScreenHeader(
+                  title: 'My Library',
+                  actions: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: FilmbaseColors.hairline),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: PopupMenuButton<ListSortOption>(
-                          icon: const Icon(Icons.sort_rounded, color: Colors.white, size: 22),
-                          color: const Color(0xFF14161F),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withOpacity(0.1))),
-                          onSelected: (result) => setState(() => _currentSort = result),
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(value: ListSortOption.newest, child: Text('Recently Created', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: ListSortOption.oldest, child: Text('Oldest First', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: ListSortOption.az, child: Text('A - Z', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: ListSortOption.za, child: Text('Z - A', style: TextStyle(color: Colors.white))),
-                          ],
-                        ),
+                      child: PopupMenuButton<ListSortOption>(
+                        icon: const Icon(Icons.sort_rounded, color: FilmbaseColors.text, size: 22),
+                        color: FilmbaseColors.elevated,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: FilmbaseColors.hairline)),
+                        onSelected: (result) => setState(() => _currentSort = result),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(value: ListSortOption.newest, child: Text('Recently Created', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: ListSortOption.oldest, child: Text('Oldest First', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: ListSortOption.az, child: Text('A - Z', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: ListSortOption.za, child: Text('Z - A', style: TextStyle(color: FilmbaseColors.text))),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: _dbService.getUserLists(currentUid),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+                        return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
                       }
 
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -270,11 +243,11 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.movie_creation_rounded, size: 80, color: Colors.white.withOpacity(0.1)),
+                              Icon(Icons.movie_creation_rounded, size: 80, color: Colors.white.withValues(alpha: 0.1)),
                               const SizedBox(height: 16),
-                              Text("Your library is empty.", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white.withOpacity(0.9))),
+                              Text("Your library is empty.", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.9))),
                               const SizedBox(height: 8),
-                              Text("Tap the button below to start curating.", style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                              Text("Tap the button below to start curating.", style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
                             ],
                           ),
                         );
@@ -319,65 +292,49 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showCreateListDialog,
-        backgroundColor: const Color(0xFFE50914),
-        elevation: 4,
+        backgroundColor: FilmbaseColors.accent,
+        elevation: 6,
         icon: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
         label: const Text('New List', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
     );
   }
 
-  // Clean, crisp card design with minimal blur and sharp borders
   Widget _buildCleanCard(BuildContext context, String title, String listId, String userId, IconData icon, Color iconColor) {
-    return Container(
+    return SurfaceCard(
       margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF14161F), // Crisp solid dark surface
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.06), width: 1),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          splashColor: iconColor.withOpacity(0.1),
-          highlightColor: Colors.white.withOpacity(0.02),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => UserListMoviesScreen(userId: userId, listId: listId, listName: title)));
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: Colors.white, letterSpacing: 0.2)),
-                ),
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_horiz_rounded, color: Colors.white.withOpacity(0.4)),
-                  color: const Color(0xFF14161F),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withOpacity(0.1))),
-                  onSelected: (value) {
-                    if (value == 'rename') _showRenameListDialog(userId, listId, title);
-                    else if (value == 'delete') _showDeleteListDialog(userId, listId, title);
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'rename', child: Row(children: [Icon(Icons.edit_rounded, size: 18, color: Colors.white70), SizedBox(width: 12), Text('Rename', style: TextStyle(color: Colors.white))])),
-                    const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_rounded, size: 18, color: Colors.redAccent), SizedBox(width: 12), Text('Delete', style: TextStyle(color: Colors.redAccent))])),
-                  ],
-                ),
-              ],
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => UserListMoviesScreen(userId: userId, listId: listId, listName: title)));
+      },
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Container(
+            width: 48, height: 48,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
             ),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
-        ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: FilmbaseColors.text, letterSpacing: 0.2)),
+          ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_horiz_rounded, color: Colors.white.withValues(alpha: 0.4)),
+            color: FilmbaseColors.elevated,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: FilmbaseColors.hairline)),
+            onSelected: (value) {
+              if (value == 'rename') _showRenameListDialog(userId, listId, title);
+              else if (value == 'delete') _showDeleteListDialog(userId, listId, title);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'rename', child: Row(children: [Icon(Icons.edit_rounded, size: 18, color: Colors.white70), SizedBox(width: 12), Text('Rename', style: TextStyle(color: FilmbaseColors.text))])),
+              const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_rounded, size: 18, color: Colors.redAccent), SizedBox(width: 12), Text('Delete', style: TextStyle(color: Colors.redAccent))])),
+            ],
+          ),
+        ],
       ),
     );
   }

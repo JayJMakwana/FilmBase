@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import '../models/movie.dart';
 import '../services/api_service.dart';
+import '../theme/filmbase_theme.dart';
+import '../widgets/cinematic_chrome.dart';
 import 'movie_details_screen.dart';
 
 enum SortOption { defaultSort, az, za, newest, oldest }
@@ -105,75 +107,43 @@ class _ListDetailsScreenState extends State<ListDetailsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0C10), // Crisp dark background
+      backgroundColor: FilmbaseColors.canvas,
       body: Stack(
         children: [
-          // Subtle background gradient glow
-          Positioned(
-            top: -100,
-            left: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFF0055FF).withOpacity(0.08)), // Blue glow for API lists
-            ),
-          ),
+          const GlowBackdrop(color: Color(0xFF0055FF), fromRight: false),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Custom Modern Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-                          onPressed: () => Navigator.pop(context),
-                        ),
+                ScreenHeader(
+                  title: widget.listName,
+                  showBack: true,
+                  actions: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: FilmbaseColors.hairline),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          widget.listName,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      child: PopupMenuButton<SortOption>(
+                        icon: const Icon(Icons.sort_rounded, color: FilmbaseColors.text, size: 20),
+                        color: FilmbaseColors.elevated,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: FilmbaseColors.hairline)),
+                        onSelected: (result) => setState(() => _currentSort = result),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(value: SortOption.defaultSort, child: Text('Default', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: SortOption.az, child: Text('A - Z', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: SortOption.za, child: Text('Z - A', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: SortOption.newest, child: Text('Newest', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(value: SortOption.oldest, child: Text('Oldest', style: TextStyle(color: FilmbaseColors.text))),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: PopupMenuButton<SortOption>(
-                          icon: const Icon(Icons.sort_rounded, color: Colors.white, size: 20),
-                          color: const Color(0xFF14161F),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withOpacity(0.1))),
-                          onSelected: (result) => setState(() => _currentSort = result),
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(value: SortOption.defaultSort, child: Text('Default', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: SortOption.az, child: Text('A - Z', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: SortOption.za, child: Text('Z - A', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: SortOption.newest, child: Text('Newest', style: TextStyle(color: Colors.white))),
-                            const PopupMenuItem(value: SortOption.oldest, child: Text('Oldest', style: TextStyle(color: Colors.white))),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 Expanded(
                   child: displayMovies.isEmpty
-                      ? Center(child: Text('No movies found.', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16)))
+                      ? Center(child: Text('No movies found.', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 16)))
                       : GridView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -187,7 +157,7 @@ class _ListDetailsScreenState extends State<ListDetailsScreen> {
                     itemCount: displayMovies.length + (_isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == displayMovies.length) {
-                        return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+                        return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
                       }
 
                       final movie = displayMovies[index];
@@ -202,22 +172,22 @@ class _ListDetailsScreenState extends State<ListDetailsScreen> {
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: FilmbaseColors.hairline),
                                   boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                                    BoxShadow(color: Colors.black.withValues(alpha: 0.38), blurRadius: 14, offset: const Offset(0, 7)),
                                   ],
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(13),
+                                  borderRadius: BorderRadius.circular(15),
                                   child: movie.posterUrl.isNotEmpty
                                       ? Image.network(
                                     movie.posterUrl,
                                     fit: BoxFit.cover,
                                     width: double.infinity,
-                                    errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFF14161F), child: Icon(Icons.broken_image_rounded, size: 40, color: Colors.white.withOpacity(0.2))),
+                                    errorBuilder: (context, error, stackTrace) => Container(color: FilmbaseColors.surface, child: Icon(Icons.broken_image_rounded, size: 40, color: Colors.white.withValues(alpha: 0.2))),
                                   )
-                                      : Container(color: const Color(0xFF14161F), width: double.infinity, child: Icon(Icons.movie_rounded, size: 40, color: Colors.white.withOpacity(0.2))),
+                                      : Container(color: FilmbaseColors.surface, width: double.infinity, child: Icon(Icons.movie_rounded, size: 40, color: Colors.white.withValues(alpha: 0.2))),
                                 ),
                               ),
                             ),
@@ -227,7 +197,7 @@ class _ListDetailsScreenState extends State<ListDetailsScreen> {
                               maxLines: 2,
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white.withOpacity(0.9), height: 1.2),
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9), height: 1.2),
                             ),
                           ],
                         ),

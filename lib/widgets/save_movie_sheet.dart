@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/movie.dart';
 import '../services/database_service.dart';
+import '../theme/filmbase_theme.dart';
 
 class SaveMovieSheet extends StatefulWidget {
   final Movie movie;
@@ -50,8 +51,8 @@ class _SaveMovieSheetState extends State<SaveMovieSheet> {
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       decoration: const BoxDecoration(
-        color: Color(0xFF1A1C24),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: FilmbaseColors.elevated,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -59,29 +60,32 @@ class _SaveMovieSheetState extends State<SaveMovieSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+            ),
             const Text(
               'Save to...',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: FilmbaseColors.text, letterSpacing: -0.3),
             ),
             const SizedBox(height: 16),
 
-            // Create New List Row
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _newListController,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: FilmbaseColors.text),
                     decoration: InputDecoration(
                       hintText: 'New list name...',
-                      hintStyle: const TextStyle(color: Colors.white38),
-                      filled: true,
-                      fillColor: const Color(0xFF0E1017),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      fillColor: FilmbaseColors.canvas,
                     ),
                   ),
                 ),
@@ -89,9 +93,9 @@ class _SaveMovieSheetState extends State<SaveMovieSheet> {
                 ElevatedButton(
                   onPressed: _createNewList,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE50914),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    backgroundColor: FilmbaseColors.accent,
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: const Icon(Icons.add, color: Colors.white),
                 ),
@@ -100,13 +104,12 @@ class _SaveMovieSheetState extends State<SaveMovieSheet> {
             const SizedBox(height: 20),
             const Divider(color: Colors.white24),
 
-            // Stream of User's Existing Lists
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: _dbService.getUserLists(widget.userId),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+                    return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
                   }
                   if (snapshot.hasError) return const Text('Error loading lists');
 
@@ -124,7 +127,6 @@ class _SaveMovieSheetState extends State<SaveMovieSheet> {
                       final listName = listDoc['listName'];
                       final listId = listDoc.id;
 
-                      // NEW: Check if this specific movie is inside this list
                       return StreamBuilder<DocumentSnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('users')
@@ -135,20 +137,27 @@ class _SaveMovieSheetState extends State<SaveMovieSheet> {
                             .doc(widget.movie.id.toString())
                             .snapshots(),
                         builder: (context, movieSnapshot) {
-                          // If the document exists, the movie is already saved!
                           bool isSaved = movieSnapshot.hasData && movieSnapshot.data!.exists;
 
-                          return ListTile(
-                            leading: Icon(
-                                isSaved ? Icons.bookmark : Icons.bookmark_border,
-                                color: isSaved ? const Color(0xFFE50914) : Colors.white70
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: FilmbaseColors.surface,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: FilmbaseColors.hairline),
                             ),
-                            title: Text(listName, style: const TextStyle(color: Colors.white)),
-                            trailing: Icon(
-                                isSaved ? Icons.check_circle : Icons.add_circle_outline,
-                                color: isSaved ? const Color(0xFFE50914) : Colors.white70
+                            child: ListTile(
+                              leading: Icon(
+                                  isSaved ? Icons.bookmark : Icons.bookmark_border,
+                                  color: isSaved ? FilmbaseColors.accent : Colors.white70
+                              ),
+                              title: Text(listName, style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.w600)),
+                              trailing: Icon(
+                                  isSaved ? Icons.check_circle : Icons.add_circle_outline,
+                                  color: isSaved ? FilmbaseColors.accent : Colors.white70
+                              ),
+                              onTap: () => _toggleMovieInList(listId, listName, isSaved),
                             ),
-                            onTap: () => _toggleMovieInList(listId, listName, isSaved),
                           );
                         },
                       );

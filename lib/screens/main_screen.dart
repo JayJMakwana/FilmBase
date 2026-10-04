@@ -1,10 +1,10 @@
 // lib/screens/main_screen.dart
 import 'package:flutter/material.dart';
+import '../theme/filmbase_theme.dart';
 import 'home_screen.dart';
 import 'explore_screen.dart';
 import 'watchlist_screen.dart';
 import 'profile_screen.dart';
-import 'search_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -26,28 +26,21 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0C10),
+      backgroundColor: FilmbaseColors.canvas,
       body: _screens[_currentIndex],
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF14161F),
-          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06), width: 1)),
+        decoration: const BoxDecoration(
+          color: Color(0xFF0E1016),
+          border: Border(top: BorderSide(color: FilmbaseColors.hairline)),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          onTap: (index) => setState(() => _currentIndex = index),
-          selectedItemColor: const Color(0xFFE50914),
-          unselectedItemColor: Colors.white.withOpacity(0.4),
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Explore'),
-            BottomNavigationBarItem(icon: Icon(Icons.bookmark_rounded), label: 'Watchlist'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
+        child: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) => setState(() => _currentIndex = index),
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore_rounded), label: 'Explore'),
+            NavigationDestination(icon: Icon(Icons.bookmark_outline_rounded), selectedIcon: Icon(Icons.bookmark_rounded), label: 'Watchlist'),
+            NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Profile'),
           ],
         ),
       ),
