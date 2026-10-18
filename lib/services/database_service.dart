@@ -112,7 +112,30 @@ class DatabaseService {
   }
 
   // Remove a movie from a specific list
+  // Remove a movie from a specific list (handles both new and old document IDs)
   Future<void> removeMovieFromList(String userId, String listId, String movieId) async {
-    await _db.collection('users').doc(userId).collection('lists').doc(listId).collection('movies').doc(movieId).delete();
+    final moviesRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('lists')
+        .doc(listId)
+        .collection('movies');
+
+    // 1. Delete if the Document ID matches movieId directly
+    await moviesRef.doc(movieId).delete();
+
+    // 2. Also query and delete any older documents where the 'movieId' field matches (as int or String)
+    final int? numericId = int.tryParse(movieId);
+    if (numericId != null) {
+      final oldIntDocs = await moviesRef.where('movieId', isEqualTo: numericId).get();
+      for (var doc in oldIntDocs.docs) {
+        await doc.reference.delete();
+      }
+    }
+
+    final oldStrDocs = await moviesRef.where('movieId', isEqualTo: movieId).get();
+    for (var doc in oldStrDocs.docs) {
+      await doc.reference.delete();
+    }
   }
 }
