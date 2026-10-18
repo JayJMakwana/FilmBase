@@ -25,7 +25,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   List<DocumentSnapshot> _searchResults = [];
   bool _isSearching = false;
 
-  int _selectedTab = 0;
+  int _selectedTab = 0; // 0: Friends, 1: Sent, 2: Incoming
 
   @override
   void initState() {
@@ -65,7 +65,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
     if (currentUid != null) {
       await _dbService.sendFriendRequest(currentUid, targetUid);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Friend request sent!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Friend request sent!'), backgroundColor: Colors.green),
+        );
       }
     }
   }
@@ -78,20 +80,36 @@ class _FriendsScreenState extends State<FriendsScreen> {
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AlertDialog(
           backgroundColor: FilmbaseColors.elevated,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: const BorderSide(color: FilmbaseColors.hairline)),
-          title: const Text('Unfriend User', style: TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold)),
-          content: Text('Are you sure you want to remove $friendName from your friends list?', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: const BorderSide(color: FilmbaseColors.hairline),
+          ),
+          title: const Text(
+            'Unfriend User',
+            style: TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Are you sure you want to remove $friendName from your friends list?',
+            style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.7)),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+              child: Text('Cancel', style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.5))),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: () async {
                 Navigator.pop(context);
                 await _dbService.unfriend(currentUid, friendUid);
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User unfriended'), backgroundColor: Colors.redAccent));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('User unfriended'), backgroundColor: Colors.redAccent),
+                  );
+                }
               },
               child: const Text('Unfriend', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
@@ -133,7 +151,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                   hintText: 'Search username...',
                                   suffixIcon: _isSearchMode
                                       ? IconButton(
-                                    icon: const Icon(Icons.clear_rounded, color: Colors.white54),
+                                    icon: Icon(Icons.clear_rounded, color: FilmbaseColors.text.withValues(alpha: 0.54)),
                                     onPressed: _clearSearch,
                                   )
                                       : null,
@@ -146,12 +164,22 @@ class _FriendsScreenState extends State<FriendsScreen> {
                               decoration: BoxDecoration(
                                 color: FilmbaseColors.accent,
                                 borderRadius: BorderRadius.circular(14),
-                                boxShadow: [BoxShadow(color: FilmbaseColors.accent.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4))],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: FilmbaseColors.accent.withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                               child: IconButton(
                                 onPressed: _isSearching ? null : _searchUser,
                                 icon: _isSearching
-                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                    ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
                                     : const Icon(Icons.search_rounded, color: Colors.white),
                                 padding: const EdgeInsets.all(14),
                               ),
@@ -162,11 +190,24 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
                         // --- 2. DYNAMIC CONTENT AREA ---
                         if (_isSearchMode) ...[
-                          Text('SEARCH RESULTS', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontWeight: FontWeight.w700, fontSize: 11, letterSpacing: 1.1)),
+                          Text(
+                            'SEARCH RESULTS',
+                            style: TextStyle(
+                              color: FilmbaseColors.text.withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           Expanded(
                             child: _searchResults.isEmpty && !_isSearching && _searchController.text.isNotEmpty
-                                ? Center(child: Text('No users found.', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))))
+                                ? Center(
+                              child: Text(
+                                'No users found.',
+                                style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.4)),
+                              ),
+                            )
                                 : ListView.builder(
                               physics: const BouncingScrollPhysics(),
                               itemCount: _searchResults.length,
@@ -183,10 +224,18 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                     leading: CircleAvatar(
                                       backgroundColor: FilmbaseColors.elevated,
                                       backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
-                                      child: profileUrl == null ? const Icon(Icons.person_rounded, color: Colors.white54) : null,
+                                      child: profileUrl == null
+                                          ? Icon(Icons.person_rounded, color: FilmbaseColors.text.withValues(alpha: 0.54))
+                                          : null,
                                     ),
-                                    title: Text(userData['username'], style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold)),
-                                    subtitle: Text(userData['email'], style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12)),
+                                    title: Text(
+                                      userData['username'] ?? '',
+                                      style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold),
+                                    ),
+                                    subtitle: Text(
+                                      userData['email'] ?? '',
+                                      style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.4), fontSize: 12),
+                                    ),
                                     trailing: IconButton(
                                       icon: const Icon(Icons.person_add_rounded, color: FilmbaseColors.accent),
                                       onPressed: () => _sendRequest(targetUid),
@@ -241,13 +290,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
             color: isActive ? FilmbaseColors.accent : FilmbaseColors.elevated,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: isActive ? FilmbaseColors.accent : FilmbaseColors.hairline),
-            boxShadow: isActive ? [BoxShadow(color: FilmbaseColors.accent.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
+            boxShadow: isActive
+                ? [BoxShadow(color: FilmbaseColors.accent.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))]
+                : [],
           ),
           alignment: Alignment.center,
           child: Text(
             text,
             style: TextStyle(
-              color: isActive ? Colors.white : Colors.white70,
+              color: isActive ? Colors.white : FilmbaseColors.text.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -260,10 +311,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
   // --- CONTENT SWITCHER ---
   Widget _buildActiveTabContent(String currentUid) {
     switch (_selectedTab) {
-      case 0: return _buildFriendsList(currentUid);
-      case 1: return _buildSentRequests(currentUid);
-      case 2: return _buildIncomingRequests(currentUid);
-      default: return const SizedBox.shrink();
+      case 0:
+        return _buildFriendsList(currentUid);
+      case 1:
+        return _buildSentRequests(currentUid);
+      case 2:
+        return _buildIncomingRequests(currentUid);
+      default:
+        return const SizedBox.shrink();
     }
   }
 
@@ -272,10 +327,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: _dbService.getFriendsList(currentUid),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return const Center(child: Text('Error loading friends', style: TextStyle(color: Colors.redAccent)));
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
+        if (snapshot.hasError) {
+          return const Center(child: Text('Error loading friends', style: TextStyle(color: Colors.redAccent)));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
+        }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No friends added yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontStyle: FontStyle.italic)));
+          return Center(
+            child: Text(
+              'No friends added yet',
+              style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.3), fontStyle: FontStyle.italic),
+            ),
+          );
         }
 
         final friends = snapshot.data!.docs;
@@ -295,7 +359,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
                 return SurfaceCard(
                   margin: const EdgeInsets.only(bottom: 10),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => FriendListsScreen(friendUid: friendUid, friendName: friendName))),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FriendListsScreen(friendUid: friendUid, friendName: friendName),
+                    ),
+                  ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.only(left: 16, right: 8, top: 4, bottom: 4),
                     leading: CircleAvatar(
@@ -304,9 +373,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       child: profileUrl == null ? const Icon(Icons.person_rounded, color: Colors.white) : null,
                     ),
                     title: Text(friendName, style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.bold)),
-                    subtitle: Text('Tap to view shared lists', style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12)),
+                    subtitle: Text(
+                      'Tap to view shared lists',
+                      style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.4), fontSize: 12),
+                    ),
                     trailing: IconButton(
-                      icon: const Icon(Icons.person_remove_rounded, color: Colors.white30),
+                      icon: Icon(Icons.person_remove_rounded, color: Colors.redAccent.withValues(alpha: 0.8)),
                       onPressed: () => _confirmUnfriend(currentUid, friendUid, friendName),
                     ),
                   ),
@@ -324,10 +396,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: _dbService.getSentRequests(currentUid),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return const Center(child: Text('Error loading requests', style: TextStyle(color: Colors.redAccent)));
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
+        if (snapshot.hasError) {
+          return const Center(child: Text('Error loading requests', style: TextStyle(color: Colors.redAccent)));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
+        }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No requests sent', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontStyle: FontStyle.italic)));
+          return Center(
+            child: Text(
+              'No requests sent',
+              style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.3), fontStyle: FontStyle.italic),
+            ),
+          );
         }
 
         final sentRequests = snapshot.data!.docs;
@@ -338,7 +419,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
         }).toList();
 
         if (pendingOrRejected.isEmpty) {
-          return Center(child: Text('All sent requests were accepted!', style: TextStyle(color: Colors.green.withValues(alpha: 0.6), fontStyle: FontStyle.italic)));
+          return Center(
+            child: Text(
+              'All sent requests were accepted!',
+              style: TextStyle(color: Colors.green.withValues(alpha: 0.6), fontStyle: FontStyle.italic),
+            ),
+          );
         }
 
         return ListView.builder(
@@ -365,7 +451,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     leading: CircleAvatar(
                       backgroundColor: FilmbaseColors.elevated,
                       backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
-                      child: profileUrl == null ? const Icon(Icons.person_rounded, color: Colors.white54) : null,
+                      child: profileUrl == null
+                          ? Icon(Icons.person_rounded, color: FilmbaseColors.text.withValues(alpha: 0.54))
+                          : null,
                     ),
                     title: Text(targetName, style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.w600)),
                     trailing: Container(
@@ -373,7 +461,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       decoration: BoxDecoration(
                         color: status == 'rejected' ? Colors.red.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: status == 'rejected' ? Colors.red.withValues(alpha: 0.3) : Colors.amber.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: status == 'rejected' ? Colors.red.withValues(alpha: 0.3) : Colors.amber.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         status == 'rejected' ? 'Rejected' : 'Pending',
@@ -399,10 +489,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: _dbService.getIncomingRequests(currentUid),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return const Center(child: Text('Error loading requests', style: TextStyle(color: Colors.redAccent)));
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
+        if (snapshot.hasError) {
+          return const Center(child: Text('Error loading requests', style: TextStyle(color: Colors.redAccent)));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
+        }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('No pending requests', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontStyle: FontStyle.italic)));
+          return Center(
+            child: Text(
+              'No pending requests',
+              style: TextStyle(color: FilmbaseColors.text.withValues(alpha: 0.3), fontStyle: FontStyle.italic),
+            ),
+          );
         }
 
         final requests = snapshot.data!.docs;
@@ -429,9 +528,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     leading: CircleAvatar(
                       backgroundColor: FilmbaseColors.elevated,
                       backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
-                      child: profileUrl == null ? const Icon(Icons.person_rounded, color: Colors.white54) : null,
+                      child: profileUrl == null
+                          ? Icon(Icons.person_rounded, color: FilmbaseColors.text.withValues(alpha: 0.54))
+                          : null,
                     ),
-                    title: Text(senderData?['username'] ?? 'Unknown User', style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.w600)),
+                    title: Text(
+                      senderData?['username'] ?? 'Unknown User',
+                      style: const TextStyle(color: FilmbaseColors.text, fontWeight: FontWeight.w600),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

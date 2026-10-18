@@ -68,13 +68,8 @@ class ApiService {
 
         return results
             .where((item) => item['media_type'] == 'movie' || item['media_type'] == 'tv')
-            .map((jsonMap) {
-          if (jsonMap['media_type'] == 'tv') {
-            jsonMap['title'] = jsonMap['name'];
-            jsonMap['release_date'] = jsonMap['first_air_date'] ?? '';
-          }
-          return Movie.fromJson(jsonMap);
-        }).toList();
+            .map((jsonMap) => Movie.fromJson(Map<String, dynamic>.from(jsonMap)))
+            .toList();
       }
     } catch (e) {
       print('Error searching: $e');
@@ -155,8 +150,10 @@ class ApiService {
     return map[name.trim().toLowerCase()] ?? name.trim().toLowerCase();
   }
 
-  Future<List<Cast>> getMovieCast(int movieId) async {
-    final String url = '$baseUrl/movie/$movieId/credits?api_key=$apiKey';
+  // Fetch cast for either a Movie or a TV Show
+  Future<List<Cast>> getMovieCast(int movieId, {String mediaType = 'movie'}) async {
+    final String type = (mediaType == 'tv') ? 'tv' : 'movie';
+    final String url = '$baseUrl/$type/$movieId/credits?api_key=$apiKey';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -170,19 +167,49 @@ class ApiService {
     return [];
   }
 
-  // Fetch a single movie's full details by its TMDB ID
-  Future<Movie?> fetchMovieDetails(int movieId) async {
+  // Fetch full details by TMDB ID (supports both Movies and TV Shows/Anime)
+  Future<Movie?> fetchMovieDetails(
+      int movieId, {
+        String? mediaType,
+        String? expectedTitle,
+      }) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/movie/$movieId?api_key=$apiKey'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return Movie.fromJson(data);
+      // 1. If we explicitly know it's a TV show, fetch from /tv/ directly
+      if (mediaType == 'tv') {
+        return await _fetchFromEndpoint('tv', movieId);
       }
+
+      // 2. Otherwise try /movie/ first
+      final movieResult = await _fetchFromEndpoint('movie', movieId);
+
+      if (movieResult != null) {
+        // If expectedTitle was passed (from Watchlist) and doesn't match the returned movie
+        // (e.g., expected "Naruto Shippuden" but got "Chilly Dogs"), fallback to /tv/
+        if (expectedTitle != null &&
+            expectedTitle.trim().isNotEmpty &&
+            movieResult.title.trim().toLowerCase() != expectedTitle.trim().toLowerCase()) {
+          final tvResult = await _fetchFromEndpoint('tv', movieId);
+          if (tvResult != null) return tvResult;
+        }
+        return movieResult;
+      }
+
+      // 3. If /movie/ returned null (404 Not Found), fallback to /tv/
+      return await _fetchFromEndpoint('tv', movieId);
     } catch (e) {
-      print('Error fetching movie details: $e');
+      print('Error fetching details: $e');
+    }
+    return null;
+  }
+
+  Future<Movie?> _fetchFromEndpoint(String type, int id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/$type/$id?api_key=$apiKey'),
+    );
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = Map<String, dynamic>.from(json.decode(response.body));
+      data['media_type'] = type;
+      return Movie.fromJson(data);
     }
     return null;
   }

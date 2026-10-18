@@ -1,4 +1,5 @@
 // lib/screens/home_screen.dart
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/movie.dart';
 import '../services/api_service.dart';
@@ -43,6 +44,28 @@ class _HomeScreenState extends State<HomeScreen> {
     _frenchFuture = _apiService.searchMoviesByLanguage('French');
   }
 
+  Future<void> _openCategoryList(String title, Future<List<Movie>> future) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: FilmbaseColors.accent),
+      ),
+    );
+
+    final List<Movie> movies = await future;
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ListDetailsScreen(listName: title, movies: movies),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,19 +83,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   floating: true,
                   title: const Row(
                     children: [
-                      Text('Film', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: FilmbaseColors.accent, letterSpacing: -0.8)),
-                      Text('Base', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: FilmbaseColors.text, letterSpacing: -0.8)),
+                      Text(
+                        'Film',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: FilmbaseColors.accent,
+                          letterSpacing: -0.8,
+                        ),
+                      ),
+                      Text(
+                        'Base',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: FilmbaseColors.text,
+                          letterSpacing: -0.8,
+                        ),
+                      ),
                     ],
                   ),
                   actions: [
                     GlassIconButton(
                       icon: Icons.bookmarks_rounded,
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyListsScreen())),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MyListsScreen()),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     GlassIconButton(
                       icon: Icons.person_add_rounded,
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FriendsScreen())),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const FriendsScreen()),
+                      ),
                     ),
                     const SizedBox(width: 16),
                   ],
@@ -82,15 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 8),
-                      FutureBuilder<List<Movie>>(
-                        future: _trendingFuture,
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                            return const SizedBox(height: 340, child: Center(child: CircularProgressIndicator(color: FilmbaseColors.accent)));
-                          }
-                          return _buildFeaturedBanner(context, snapshot.data!.first);
-                        },
-                      ),
+                      _buildCinematicHeroBanner(context),
                       const SizedBox(height: 32),
                       _buildMovieRow('Trending Now', _trendingFuture, 'Trending Now'),
                       _buildMovieRow('Popular on FilmBase', _popularFuture, 'Popular'),
@@ -113,71 +150,228 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFeaturedBanner(BuildContext context, Movie movie) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: movie))),
-      child: Container(
-        height: 360,
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: FilmbaseColors.hairline),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.55), blurRadius: 28, offset: const Offset(0, 14)),
-            BoxShadow(color: FilmbaseColors.accent.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
-          ],
-          image: DecorationImage(image: NetworkImage(movie.backdropUrl.isNotEmpty ? movie.backdropUrl : movie.posterUrl), fit: BoxFit.cover),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: const LinearGradient(
-              colors: [Colors.transparent, Color(0xCC07080C), Color(0xF207080C)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: [0.28, 0.72, 1.0],
-            ),
+  // --- STATIC CINEMATIC HERO BANNER (Ported from ASP.NET Razor View) ---
+  Widget _buildCinematicHeroBanner(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isDesktop = screenWidth > 800;
+    final bool isTablet = screenWidth > 550;
+
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(
+        minHeight: isDesktop ? 420 : (isTablet ? 380 : 340),
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.6),
+            blurRadius: 30,
+            offset: const Offset(0, 14),
           ),
-          padding: const EdgeInsets.all(22),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(23),
+        child: Stack(
           alignment: Alignment.bottomLeft,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: FilmbaseColors.accent.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text('FEATURED SPOTLIGHT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.1)),
+          children: [
+            // 1. Background Image (Loads local asset first, falls back to TMDB proxy URL)
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/cinematic_hero_banner.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.network(
+                    'https://filmbase-proxy.jaym15993.workers.dev/t/p/original/b33nnKl1GSFbao4l3fZDDqsTc0F.jpg',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    errorBuilder: (_, __, ___) => Container(color: const Color(0xFF07090E)),
+                  );
+                },
+              ),
+            ),
+
+            // 2. Bottom-to-Top Gradient: linear-gradient(to top, #07090e 5%, rgba(7,9,14,0.7) 40%, rgba(7,9,14,0.3) 100%)
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Color(0xFF07090E),
+                      Color(0xB307090E),
+                      Color(0x4D07090E),
+                    ],
+                    stops: [0.05, 0.40, 1.0],
                   ),
-                  const SizedBox(width: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: FilmbaseColors.gold.withValues(alpha: 0.35)),
+                ),
+              ),
+            ),
+
+            // 3. Left-to-Right Gradient: linear-gradient(to right, #07090e 20%, rgba(7,9,14,0.8) 50%, rgba(7,9,14,0.2) 100%)
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Color(0xFF07090E),
+                      Color(0xCC07090E),
+                      Color(0x3307090E),
+                    ],
+                    stops: [0.20, 0.50, 1.0],
+                  ),
+                ),
+              ),
+            ),
+
+            // 4. Foreground Content (max-w-2xl equivalent)
+            Padding(
+              padding: EdgeInsets.all(isDesktop ? 44.0 : (isTablet ? 32.0 : 24.0)),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 640),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Frosted Pill Badge
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: FilmbaseColors.accent.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: FilmbaseColors.accent.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('🎬', style: TextStyle(fontSize: 12)),
+                              SizedBox(width: 6),
+                              Text(
+                                'Cinema Catalog & Personal Watchlists',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    const SizedBox(height: 16),
+
+                    // Main Heading
+                    Text(
+                      'Welcome to FilmBase',
+                      style: TextStyle(
+                        fontSize: isDesktop ? 44 : (isTablet ? 34 : 28),
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.8,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Subtitle Description
+                    Text(
+                      'Track, discover, and save your favorite movies in one place. Browse curated collections, search international cinema, and curate your personalized watchlist.',
+                      style: TextStyle(
+                        fontSize: isDesktop ? 16 : 14,
+                        color: const Color(0xFFCBD5E1), // slate-300
+                        height: 1.55,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Action Buttons
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
                       children: [
-                        const Icon(Icons.star_rounded, color: FilmbaseColors.gold, size: 14),
-                        const SizedBox(width: 4),
-                        Text(movie.voteAverage.toStringAsFixed(1), style: const TextStyle(color: FilmbaseColors.gold, fontWeight: FontWeight.w700, fontSize: 12)),
+                        // Primary Button: Discover Titles
+                        GestureDetector(
+                          onTap: () => _openCategoryList('Popular', _popularFuture),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: FilmbaseColors.accent,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: FilmbaseColors.accent.withValues(alpha: 0.35),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('🧭', style: TextStyle(fontSize: 14)),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Discover Popular',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Secondary Button: Trending This Week
+                        GestureDetector(
+                          onTap: () => _openCategoryList('Trending This Week', _trendingFuture),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('🔥', style: TextStyle(fontSize: 14)),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Trending This Week',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Text(movie.title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: FilmbaseColors.text, letterSpacing: -0.6, height: 1.1)),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -193,24 +387,26 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: FilmbaseColors.text, letterSpacing: -0.2)),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: FilmbaseColors.text,
+                    letterSpacing: -0.2,
+                  ),
+                ),
               ),
               GestureDetector(
-                onTap: () async {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    barrierColor: Colors.black54,
-                    builder: (_) => const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent)),
-                  );
-
-                  List<Movie> movies = await future;
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => ListDetailsScreen(listName: categoryKey, movies: movies)));
-                },
-                child: const Text('See all', style: TextStyle(fontSize: 13, color: FilmbaseColors.accent, fontWeight: FontWeight.w700)),
+                onTap: () => _openCategoryList(categoryKey, future),
+                child: const Text(
+                  'See all',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: FilmbaseColors.accent,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
           ),
@@ -220,8 +416,14 @@ class _HomeScreenState extends State<HomeScreen> {
           child: FutureBuilder<List<Movie>>(
             future: future,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
-              if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text('No movies available', style: TextStyle(color: FilmbaseColors.muted)));
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent));
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                  child: Text('No movies available', style: TextStyle(color: FilmbaseColors.muted)),
+                );
+              }
 
               final movies = snapshot.data!;
               return ListView.builder(
@@ -232,14 +434,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemBuilder: (context, index) {
                   final movie = movies[index];
                   return GestureDetector(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: movie))),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: movie)),
+                    ),
                     child: Container(
                       width: 140,
                       margin: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.42), blurRadius: 16, offset: const Offset(0, 8)),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.42),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
                         ],
                       ),
                       child: ClipRRect(
@@ -250,7 +459,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             Image.network(
                               movie.posterUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => Container(color: FilmbaseColors.surface, child: const Icon(Icons.broken_image, color: Colors.white24)),
+                              errorBuilder: (c, e, s) => Container(
+                                color: FilmbaseColors.surface,
+                                child: const Icon(Icons.broken_image, color: Colors.white24),
+                              ),
                             ),
                             const DecoratedBox(
                               decoration: BoxDecoration(
@@ -269,7 +481,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 movie.title,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: FilmbaseColors.text, height: 1.2),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: FilmbaseColors.text,
+                                  height: 1.2,
+                                ),
                               ),
                             ),
                           ],

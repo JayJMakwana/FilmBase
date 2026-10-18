@@ -33,8 +33,24 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    int columns = screenWidth > 1400 ? 7 : screenWidth > 1100 ? 6 : screenWidth > 900 ? 5 : screenWidth > 700 ? 4 : screenWidth > 500 ? 3 : 2;
-    double childAspectRatio = columns >= 5 ? 0.6 : columns == 4 ? 0.57 : columns == 3 ? 0.58 : 0.55;
+    int columns = screenWidth > 1400
+        ? 7
+        : screenWidth > 1100
+        ? 6
+        : screenWidth > 900
+        ? 5
+        : screenWidth > 700
+        ? 4
+        : screenWidth > 500
+        ? 3
+        : 2;
+    double childAspectRatio = columns >= 5
+        ? 0.6
+        : columns == 4
+        ? 0.57
+        : columns == 3
+        ? 0.58
+        : 0.55;
 
     return Scaffold(
       backgroundColor: FilmbaseColors.canvas,
@@ -58,13 +74,28 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                       child: PopupMenuButton<MovieSortOption>(
                         icon: const Icon(Icons.sort_rounded, color: FilmbaseColors.text, size: 20),
                         color: FilmbaseColors.elevated,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: FilmbaseColors.hairline)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: FilmbaseColors.hairline),
+                        ),
                         onSelected: (result) => setState(() => _currentSort = result),
                         itemBuilder: (context) => [
-                          const PopupMenuItem(value: MovieSortOption.newest, child: Text('Recently Added', style: TextStyle(color: FilmbaseColors.text))),
-                          const PopupMenuItem(value: MovieSortOption.oldest, child: Text('Oldest Added', style: TextStyle(color: FilmbaseColors.text))),
-                          const PopupMenuItem(value: MovieSortOption.az, child: Text('A - Z', style: TextStyle(color: FilmbaseColors.text))),
-                          const PopupMenuItem(value: MovieSortOption.za, child: Text('Z - A', style: TextStyle(color: FilmbaseColors.text))),
+                          const PopupMenuItem(
+                            value: MovieSortOption.newest,
+                            child: Text('Recently Added', style: TextStyle(color: FilmbaseColors.text)),
+                          ),
+                          const PopupMenuItem(
+                            value: MovieSortOption.oldest,
+                            child: Text('Oldest Added', style: TextStyle(color: FilmbaseColors.text)),
+                          ),
+                          const PopupMenuItem(
+                            value: MovieSortOption.az,
+                            child: Text('A - Z', style: TextStyle(color: FilmbaseColors.text)),
+                          ),
+                          const PopupMenuItem(
+                            value: MovieSortOption.za,
+                            child: Text('Z - A', style: TextStyle(color: FilmbaseColors.text)),
+                          ),
                         ],
                       ),
                     ),
@@ -85,7 +116,14 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                             children: [
                               Icon(Icons.movie_filter_rounded, size: 80, color: Colors.white.withValues(alpha: 0.1)),
                               const SizedBox(height: 16),
-                              Text('No movies in ${widget.listName}.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.8))),
+                              Text(
+                                'No movies in ${widget.listName}.',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -101,10 +139,15 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                         final timeB = (dataB['addedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
 
                         switch (_currentSort) {
-                          case MovieSortOption.az: return titleA.compareTo(titleB);
-                          case MovieSortOption.za: return titleB.compareTo(titleA);
-                          case MovieSortOption.oldest: return timeA.compareTo(timeB);
-                          case MovieSortOption.newest: default: return timeB.compareTo(timeA);
+                          case MovieSortOption.az:
+                            return titleA.compareTo(titleB);
+                          case MovieSortOption.za:
+                            return titleB.compareTo(titleA);
+                          case MovieSortOption.oldest:
+                            return timeA.compareTo(timeB);
+                          case MovieSortOption.newest:
+                          default:
+                            return timeB.compareTo(timeA);
                         }
                       });
 
@@ -121,28 +164,46 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                         itemBuilder: (context, index) {
                           final movieData = sortedMovies[index].data() as Map<String, dynamic>;
                           String rawPath = movieData['posterPath'] ?? '';
-                          String imageUrl = rawPath.startsWith('http') ? rawPath : 'https://image.tmdb.org/t/p/w500$rawPath';
+                          String imageUrl = rawPath.startsWith('http')
+                              ? rawPath
+                              : 'https://filmbase-proxy.jaym15993.workers.dev/t/p/w500$rawPath';
 
                           return GestureDetector(
                             onTap: () async {
                               final int movieId = movieData['movieId'] ?? 0;
+                              final String expectedTitle = (movieData['title'] ?? '').toString();
+                              final String? mediaType = movieData['mediaType']?.toString();
+
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,
                                 barrierColor: Colors.black54,
-                                builder: (_) => const Center(child: CircularProgressIndicator(color: FilmbaseColors.accent)),
+                                builder: (_) => const Center(
+                                  child: CircularProgressIndicator(color: FilmbaseColors.accent),
+                                ),
                               );
 
                               final ApiService apiService = ApiService();
-                              Movie? fullMovie = await apiService.fetchMovieDetails(movieId);
+                              Movie? fullMovie = await apiService.fetchMovieDetails(
+                                movieId,
+                                mediaType: mediaType,
+                                expectedTitle: expectedTitle,
+                              );
 
                               if (!context.mounted) return;
                               Navigator.pop(context);
 
                               if (fullMovie != null) {
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => MovieDetailsScreen(movie: fullMovie)));
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MovieDetailsScreen(movie: fullMovie),
+                                  ),
+                                );
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not load movie details.')));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Could not load details.')),
+                                );
                               }
                             },
                             child: Container(
@@ -150,7 +211,11 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: FilmbaseColors.hairline),
                                 boxShadow: [
-                                  BoxShadow(color: Colors.black.withValues(alpha: 0.38), blurRadius: 14, offset: const Offset(0, 7)),
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.38),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 7),
+                                  ),
                                 ],
                               ),
                               child: ClipRRect(
@@ -160,7 +225,11 @@ class _UserListMoviesScreenState extends State<UserListMoviesScreen> {
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) => Container(
                                     color: FilmbaseColors.surface,
-                                    child: Icon(Icons.broken_image_rounded, size: 40, color: Colors.white.withValues(alpha: 0.2)),
+                                    child: Icon(
+                                      Icons.broken_image_rounded,
+                                      size: 40,
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                    ),
                                   ),
                                 ),
                               ),

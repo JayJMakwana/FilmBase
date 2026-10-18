@@ -105,7 +105,11 @@ class MovieDetailsScreen extends StatelessWidget {
           width: width,
           height: height,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => SizedBox(width: width, height: height, child: const Icon(Icons.broken_image_rounded, size: 80, color: Colors.white38)),
+          errorBuilder: (context, error, stackTrace) => SizedBox(
+            width: width,
+            height: height,
+            child: const Icon(Icons.broken_image_rounded, size: 80, color: Colors.white38),
+          ),
         ),
       ),
     );
@@ -115,7 +119,10 @@ class MovieDetailsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(movie.title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: FilmbaseColors.text, letterSpacing: -0.5, height: 1.1)),
+        Text(
+          movie.title,
+          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: FilmbaseColors.text, letterSpacing: -0.5, height: 1.1),
+        ),
         const SizedBox(height: 14),
         Wrap(
           spacing: 10,
@@ -162,7 +169,7 @@ class MovieDetailsScreen extends StatelessWidget {
         const SizedBox(height: 28),
 
         FutureBuilder<List<Cast>>(
-          future: _apiService.getMovieCast(movie.id),
+          future: _apiService.getMovieCast(movie.id, mediaType: movie.mediaType),
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
             final castList = snapshot.data!;
